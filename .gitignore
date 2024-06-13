@@ -1,0 +1,4 @@
+
+*.pfx
+*.intunewin
+secrets.json

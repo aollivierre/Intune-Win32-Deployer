@@ -1,0 +1,27 @@
+{
+  "PackageName": "PR4B_IntuneWin32Deployer",
+  "PackageUniqueGUID": "c793029f-08b5-496e-a79f-447a57babb71",
+  "Version": 1,
+  "PackageExecutionContext": "User",
+  "LoggingDeploymentName": "PR4B_IntuneWin32DeployerCustomlog",
+  "ScriptMode": "Remediation",
+  "RunOnDemand": false,
+  "UsePSADT": false,
+  "TriggerType": "Daily",
+  "LogonUserId": "administrator",
+
+  "ID": "placeholder",
+  "Publisher": "Abdullah Ollivierre",
+  "AppVersion": "1.0.0",
+  "Developer": "Abdullah Ollivierre",
+  "Owner": "Abdullah Ollivierre",
+  "CompanyPortalFeaturedApp": "true",
+  "InstallExperience": "system",
+  "RestartBehavior": "suppress",
+  "PSADT": "false",
+  "serviceUIPSADT": "false",
+  "InformationURL": "https://placeholder.com/info",
+  "PrivacyURL": "https://placeholder.com/privacy",
+  "PrinterInstall": "false"
+
+}
