@@ -1,0 +1,1800 @@
+{
+    "CimClass":  {
+                     "CimSuperClassName":  "VpnCommonConfig",
+                     "CimSuperClass":  {
+                                           "CimSuperClassName":  null,
+                                           "CimSuperClass":  null,
+                                           "CimClassProperties":  [
+                                                                      {
+                                                                          "Name":  "ConnectionStatus",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, ReadOnly, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "ValueMap",
+                                                                                                 "Value":  [
+                                                                                                               "Connected",
+                                                                                                               "NotConnected",
+                                                                                                               "Connecting",
+                                                                                                               "Limited",
+                                                                                                               "Dormant"
+                                                                                                           ],
+                                                                                                 "CimType":  30,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "DnsSuffix",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "Guid",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, ReadOnly, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "IdleDisconnectSeconds",
+                                                                          "Value":  null,
+                                                                          "CimType":  6,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "IsAutoTriggerEnabled",
+                                                                          "Value":  null,
+                                                                          "CimType":  1,
+                                                                          "Flags":  "Property, ReadOnly, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "Name",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "ProfileType",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "ValueMap",
+                                                                                                 "Value":  [
+                                                                                                               "Inbox",
+                                                                                                               "ThirdParty"
+                                                                                                           ],
+                                                                                                 "CimType":  30,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "ProvisioningAuthority",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "Proxy",
+                                                                          "Value":  null,
+                                                                          "CimType":  16,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "EmbeddedInstance",
+                                                                                                 "Value":  "VpnConnectionProxy",
+                                                                                                 "CimType":  14,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  "VpnConnectionProxy"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "RememberCredential",
+                                                                          "Value":  null,
+                                                                          "CimType":  1,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "Routes",
+                                                                          "Value":  null,
+                                                                          "CimType":  32,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "EmbeddedInstance",
+                                                                                                 "Value":  "MSFT_NetRoute",
+                                                                                                 "CimType":  14,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  "MSFT_NetRoute"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "ServerAddress",
+                                                                          "Value":  null,
+                                                                          "CimType":  14,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "ServerList",
+                                                                          "Value":  null,
+                                                                          "CimType":  32,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "EmbeddedInstance",
+                                                                                                 "Value":  "VpnServerAddress",
+                                                                                                 "CimType":  14,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  "VpnServerAddress"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "SplitTunneling",
+                                                                          "Value":  null,
+                                                                          "CimType":  1,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  null
+                                                                      },
+                                                                      {
+                                                                          "Name":  "VpnTrigger",
+                                                                          "Value":  null,
+                                                                          "CimType":  16,
+                                                                          "Flags":  "Property, NullValue",
+                                                                          "Qualifiers":  [
+                                                                                             {
+                                                                                                 "Name":  "EmbeddedInstance",
+                                                                                                 "Value":  "VpnConnectionTrigger",
+                                                                                                 "CimType":  14,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "read",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Name":  "write",
+                                                                                                 "Value":  true,
+                                                                                                 "CimType":  1,
+                                                                                                 "Flags":  "EnableOverride, ToSubclass"
+                                                                                             }
+                                                                                         ],
+                                                                          "ReferenceClassName":  "VpnConnectionTrigger"
+                                                                      }
+                                                                  ],
+                                           "CimClassQualifiers":  [
+                                                                      {
+                                                                          "Name":  "ClassVersion",
+                                                                          "Value":  "1.0",
+                                                                          "CimType":  14,
+                                                                          "Flags":  "EnableOverride, ToSubclass"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "dynamic",
+                                                                          "Value":  true,
+                                                                          "CimType":  1,
+                                                                          "Flags":  "EnableOverride, ToSubclass"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "locale",
+                                                                          "Value":  1033,
+                                                                          "CimType":  7,
+                                                                          "Flags":  "EnableOverride, Restricted"
+                                                                      },
+                                                                      {
+                                                                          "Name":  "provider",
+                                                                          "Value":  "VpnClientPSProvider",
+                                                                          "CimType":  14,
+                                                                          "Flags":  "EnableOverride, ToSubclass"
+                                                                      }
+                                                                  ],
+                                           "CimClassMethods":  [
+
+                                                               ],
+                                           "CimSystemProperties":  {
+                                                                       "Namespace":  "ROOT/Microsoft/Windows/RemoteAccess/Client",
+                                                                       "ServerName":  "340E6A59CB85",
+                                                                       "ClassName":  "VpnCommonConfig",
+                                                                       "Path":  null
+                                                                   }
+                                       },
+                     "CimClassProperties":  [
+                                                {
+                                                    "Name":  "ConnectionStatus",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Connected",
+                                                                                         "NotConnected",
+                                                                                         "Connecting",
+                                                                                         "Limited",
+                                                                                         "Dormant"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "DnsSuffix",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "Guid",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "IdleDisconnectSeconds",
+                                                    "Value":  null,
+                                                    "CimType":  6,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "IsAutoTriggerEnabled",
+                                                    "Value":  null,
+                                                    "CimType":  1,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "Name",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "ProfileType",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Inbox",
+                                                                                         "ThirdParty"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "ProvisioningAuthority",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "Proxy",
+                                                    "Value":  null,
+                                                    "CimType":  16,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "EmbeddedInstance",
+                                                                           "Value":  "VpnConnectionProxy",
+                                                                           "CimType":  14,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  "VpnConnectionProxy"
+                                                },
+                                                {
+                                                    "Name":  "RememberCredential",
+                                                    "Value":  null,
+                                                    "CimType":  1,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "Routes",
+                                                    "Value":  null,
+                                                    "CimType":  32,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "EmbeddedInstance",
+                                                                           "Value":  "MSFT_NetRoute",
+                                                                           "CimType":  14,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  "MSFT_NetRoute"
+                                                },
+                                                {
+                                                    "Name":  "ServerAddress",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "ServerList",
+                                                    "Value":  null,
+                                                    "CimType":  32,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "EmbeddedInstance",
+                                                                           "Value":  "VpnServerAddress",
+                                                                           "CimType":  14,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  "VpnServerAddress"
+                                                },
+                                                {
+                                                    "Name":  "SplitTunneling",
+                                                    "Value":  null,
+                                                    "CimType":  1,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "VpnTrigger",
+                                                    "Value":  null,
+                                                    "CimType":  16,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "EmbeddedInstance",
+                                                                           "Value":  "VpnConnectionTrigger",
+                                                                           "CimType":  14,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  "VpnConnectionTrigger"
+                                                },
+                                                {
+                                                    "Name":  "AllUserConnection",
+                                                    "Value":  null,
+                                                    "CimType":  1,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "AuthenticationMethod",
+                                                    "Value":  null,
+                                                    "CimType":  30,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Pap",
+                                                                                         "Chap",
+                                                                                         "MsChapv2",
+                                                                                         "Eap",
+                                                                                         "MachineCertificate"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "EapConfigXmlStream",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "EncryptionLevel",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "NoEncryption",
+                                                                                         "Optional",
+                                                                                         "Required",
+                                                                                         "Maximum"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "IPSecCustomPolicy",
+                                                    "Value":  null,
+                                                    "CimType":  32,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "EmbeddedInstance",
+                                                                           "Value":  "VpnConnectionIPsecConfiguration",
+                                                                           "CimType":  14,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  "VpnConnectionIPsecConfiguration"
+                                                },
+                                                {
+                                                    "Name":  "L2tpIPsecAuth",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Certificate",
+                                                                                         "Psk"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "MachineCertificateEKUFilter",
+                                                    "Value":  null,
+                                                    "CimType":  30,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "MachineCertificateIssuerFilter",
+                                                    "Value":  null,
+                                                    "CimType":  18,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "NapState",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Success",
+                                                                                         "NotNapCapable",
+                                                                                         "NoConnection",
+                                                                                         "Error"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "TunnelType",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "ValueMap",
+                                                                           "Value":  [
+                                                                                         "Automatic",
+                                                                                         "Pptp",
+                                                                                         "L2tp",
+                                                                                         "Sstp",
+                                                                                         "Ikev2"
+                                                                                     ],
+                                                                           "CimType":  30,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "UseWinlogonCredential",
+                                                    "Value":  null,
+                                                    "CimType":  1,
+                                                    "Flags":  "Property, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       },
+                                                                       {
+                                                                           "Name":  "write",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                },
+                                                {
+                                                    "Name":  "VpnConfigurationXml",
+                                                    "Value":  null,
+                                                    "CimType":  14,
+                                                    "Flags":  "Property, ReadOnly, NullValue",
+                                                    "Qualifiers":  [
+                                                                       {
+                                                                           "Name":  "read",
+                                                                           "Value":  true,
+                                                                           "CimType":  1,
+                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                       }
+                                                                   ],
+                                                    "ReferenceClassName":  null
+                                                }
+                                            ],
+                     "CimClassQualifiers":  [
+                                                {
+                                                    "Name":  "dynamic",
+                                                    "Value":  true,
+                                                    "CimType":  1,
+                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                },
+                                                {
+                                                    "Name":  "provider",
+                                                    "Value":  "VpnClientPSProvider",
+                                                    "CimType":  14,
+                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                },
+                                                {
+                                                    "Name":  "ClassVersion",
+                                                    "Value":  "1.0.0",
+                                                    "CimType":  14,
+                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                },
+                                                {
+                                                    "Name":  "locale",
+                                                    "Value":  1033,
+                                                    "CimType":  7,
+                                                    "Flags":  "EnableOverride, Restricted"
+                                                }
+                                            ],
+                     "CimClassMethods":  [
+
+                                         ],
+                     "CimSystemProperties":  {
+                                                 "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                                 "ServerName":  "340E6A59CB85",
+                                                 "ClassName":  "VpnConnection",
+                                                 "Path":  null
+                                             }
+                 },
+    "CimInstanceProperties":  [
+                                  {
+                                      "Name":  "ConnectionStatus",
+                                      "Value":  "Disconnected",
+                                      "CimType":  14,
+                                      "Flags":  "Property, ReadOnly, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "DnsSuffix",
+                                      "Value":  "",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "Guid",
+                                      "Value":  "{DACE231A-F0CF-4C69-B37E-1A298A2DDD07}",
+                                      "CimType":  14,
+                                      "Flags":  "Property, ReadOnly, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "IdleDisconnectSeconds",
+                                      "Value":  0,
+                                      "CimType":  6,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "IsAutoTriggerEnabled",
+                                      "Value":  false,
+                                      "CimType":  1,
+                                      "Flags":  "Property, ReadOnly, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "Name",
+                                      "Value":  "MyVPNConnection",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "ProfileType",
+                                      "Value":  "Inbox",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "ProvisioningAuthority",
+                                      "Value":  null,
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "Proxy",
+                                      "Value":  null,
+                                      "CimType":  16,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "RememberCredential",
+                                      "Value":  false,
+                                      "CimType":  1,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "Routes",
+                                      "Value":  [
+
+                                                ],
+                                      "CimType":  32,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "ServerAddress",
+                                      "Value":  "vpn.example.com",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "ServerList",
+                                      "Value":  [
+
+                                                ],
+                                      "CimType":  32,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "SplitTunneling",
+                                      "Value":  false,
+                                      "CimType":  1,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "VpnTrigger",
+                                      "Value":  {
+                                                    "CimClass":  {
+                                                                     "CimSuperClassName":  null,
+                                                                     "CimSuperClass":  null,
+                                                                     "CimClassProperties":  [
+                                                                                                {
+                                                                                                    "Name":  "ApplicationID",
+                                                                                                    "Value":  null,
+                                                                                                    "CimType":  30,
+                                                                                                    "Flags":  "Property, NullValue",
+                                                                                                    "Qualifiers":  [
+                                                                                                                       {
+                                                                                                                           "Name":  "read",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "write",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                    "ReferenceClassName":  null
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "ConnectionName",
+                                                                                                    "Value":  null,
+                                                                                                    "CimType":  14,
+                                                                                                    "Flags":  "Property, NullValue",
+                                                                                                    "Qualifiers":  [
+                                                                                                                       {
+                                                                                                                           "Name":  "read",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "write",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                    "ReferenceClassName":  null
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "dnsConfig",
+                                                                                                    "Value":  null,
+                                                                                                    "CimType":  32,
+                                                                                                    "Flags":  "Property, NullValue",
+                                                                                                    "Qualifiers":  [
+                                                                                                                       {
+                                                                                                                           "Name":  "EmbeddedInstance",
+                                                                                                                           "Value":  "VpnConnectionTriggerDnsConfiguration",
+                                                                                                                           "CimType":  14,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "read",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "write",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                    "ReferenceClassName":  "VpnConnectionTriggerDnsConfiguration"
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "DnsSuffixSearchList",
+                                                                                                    "Value":  null,
+                                                                                                    "CimType":  30,
+                                                                                                    "Flags":  "Property, NullValue",
+                                                                                                    "Qualifiers":  [
+                                                                                                                       {
+                                                                                                                           "Name":  "read",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "write",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                    "ReferenceClassName":  null
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "TrustedNetwork",
+                                                                                                    "Value":  null,
+                                                                                                    "CimType":  30,
+                                                                                                    "Flags":  "Property, NullValue",
+                                                                                                    "Qualifiers":  [
+                                                                                                                       {
+                                                                                                                           "Name":  "read",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "Name":  "write",
+                                                                                                                           "Value":  true,
+                                                                                                                           "CimType":  1,
+                                                                                                                           "Flags":  "EnableOverride, ToSubclass"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                    "ReferenceClassName":  null
+                                                                                                }
+                                                                                            ],
+                                                                     "CimClassQualifiers":  [
+                                                                                                {
+                                                                                                    "Name":  "ClassVersion",
+                                                                                                    "Value":  "1.0",
+                                                                                                    "CimType":  14,
+                                                                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "dynamic",
+                                                                                                    "Value":  true,
+                                                                                                    "CimType":  1,
+                                                                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "locale",
+                                                                                                    "Value":  1033,
+                                                                                                    "CimType":  7,
+                                                                                                    "Flags":  "EnableOverride, Restricted"
+                                                                                                },
+                                                                                                {
+                                                                                                    "Name":  "provider",
+                                                                                                    "Value":  "VpnClientPSProvider",
+                                                                                                    "CimType":  14,
+                                                                                                    "Flags":  "EnableOverride, ToSubclass"
+                                                                                                }
+                                                                                            ],
+                                                                     "CimClassMethods":  [
+
+                                                                                         ],
+                                                                     "CimSystemProperties":  {
+                                                                                                 "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                                                                                 "ServerName":  "340E6A59CB85",
+                                                                                                 "ClassName":  "VpnConnectionTrigger",
+                                                                                                 "Path":  null
+                                                                                             }
+                                                                 },
+                                                    "CimInstanceProperties":  [
+                                                                                  {
+                                                                                      "Name":  "ApplicationID",
+                                                                                      "Value":  null,
+                                                                                      "CimType":  30,
+                                                                                      "Flags":  "Property, NotModified, NullValue",
+                                                                                      "IsValueModified":  false
+                                                                                  },
+                                                                                  {
+                                                                                      "Name":  "ConnectionName",
+                                                                                      "Value":  "MyVPNConnection",
+                                                                                      "CimType":  14,
+                                                                                      "Flags":  "Property, NotModified",
+                                                                                      "IsValueModified":  false
+                                                                                  },
+                                                                                  {
+                                                                                      "Name":  "dnsConfig",
+                                                                                      "Value":  null,
+                                                                                      "CimType":  32,
+                                                                                      "Flags":  "Property, NotModified, NullValue",
+                                                                                      "IsValueModified":  false
+                                                                                  },
+                                                                                  {
+                                                                                      "Name":  "DnsSuffixSearchList",
+                                                                                      "Value":  null,
+                                                                                      "CimType":  30,
+                                                                                      "Flags":  "Property, NotModified, NullValue",
+                                                                                      "IsValueModified":  false
+                                                                                  },
+                                                                                  {
+                                                                                      "Name":  "TrustedNetwork",
+                                                                                      "Value":  null,
+                                                                                      "CimType":  30,
+                                                                                      "Flags":  "Property, NotModified, NullValue",
+                                                                                      "IsValueModified":  false
+                                                                                  }
+                                                                              ],
+                                                    "CimSystemProperties":  {
+                                                                                "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                                                                "ServerName":  "340E6A59CB85",
+                                                                                "ClassName":  "VpnConnectionTrigger",
+                                                                                "Path":  null
+                                                                            }
+                                                },
+                                      "CimType":  16,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "AllUserConnection",
+                                      "Value":  false,
+                                      "CimType":  1,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "AuthenticationMethod",
+                                      "Value":  [
+                                                    "MsChapv2"
+                                                ],
+                                      "CimType":  30,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "EapConfigXmlStream",
+                                      "Value":  null,
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "EncryptionLevel",
+                                      "Value":  "Optional",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "IPSecCustomPolicy",
+                                      "Value":  null,
+                                      "CimType":  32,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "L2tpIPsecAuth",
+                                      "Value":  null,
+                                      "CimType":  14,
+                                      "Flags":  "Property, ReadOnly, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "MachineCertificateEKUFilter",
+                                      "Value":  null,
+                                      "CimType":  30,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "MachineCertificateIssuerFilter",
+                                      "Value":  null,
+                                      "CimType":  18,
+                                      "Flags":  "Property, NotModified, NullValue",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "NapState",
+                                      "Value":  "NotConnected",
+                                      "CimType":  14,
+                                      "Flags":  "Property, ReadOnly, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "TunnelType",
+                                      "Value":  "Pptp",
+                                      "CimType":  14,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "UseWinlogonCredential",
+                                      "Value":  false,
+                                      "CimType":  1,
+                                      "Flags":  "Property, NotModified",
+                                      "IsValueModified":  false
+                                  },
+                                  {
+                                      "Name":  "VpnConfigurationXml",
+                                      "Value":  "\u003cVpnProfile\u003e\u003cVpnConfiguration\u003e\u003cName\u003eMyVPNConnection\u003c/Name\u003e\u003cAllUserConnection\u003efalse\u003c/AllUserConnection\u003e\u003cServerAddress\u003evpn.example.com\u003c/ServerAddress\u003e\u003cTunnelType\u003ePptp\u003c/TunnelType\u003e\u003cEncryptionLevel\u003eOptional\u003c/EncryptionLevel\u003e\u003cAutoTriggerEnabled\u003efalse\u003c/AutoTriggerEnabled\u003e\u003cAuthenticationMethod\u003e\u003cMethod\u003eMsChapv2\u003c/Method\u003e\u003c/AuthenticationMethod\u003e\u003cSplitTunneling\u003efalse\u003c/SplitTunneling\u003e\u003cL2tpPsk/\u003e\u003cRememberCredential\u003efalse\u003c/RememberCredential\u003e\u003cUseWinlogonCredential\u003efalse\u003c/UseWinlogonCredential\u003e\u003cIdleDisconnectSeconds\u003e0\u003c/IdleDisconnectSeconds\u003e\u003cMachineCertificateIssuerFilter/\u003e\u003cMachineCertificateEKUFilter/\u003e\u003cDnsSuffix/\u003e\u003cProvisioningAuthority/\u003e\u003cVpnServerList/\u003e\u003cRoute/\u003e\u003cCryptographySuite/\u003e\u003cTrigger\u003e\u003cClassicAppIDList/\u003e\u003cModernAppIDList/\u003e\u003cNrptRuleList/\u003e\u003cDnsSuffixSearchList/\u003e\u003cTrustedNetworkList/\u003e\u003c/Trigger\u003e\u003cVpnProxy/\u003e\u003c/VpnConfiguration\u003e\u003cEapConfiguration/\u003e\u003c/VpnProfile\u003e\r\n",
+                                      "CimType":  14,
+                                      "Flags":  "Property, ReadOnly, NotModified",
+                                      "IsValueModified":  false
+                                  }
+                              ],
+    "CimSystemProperties":  {
+                                "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                "ServerName":  "340E6A59CB85",
+                                "ClassName":  "VpnConnection",
+                                "Path":  null
+                            },
+    "EapConfigXmlStream":  null,
+    "VpnConfigurationXml":  [
+                                [
+                                    [
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+                                                [
+
+                                                ]
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+
+                                        ],
+                                        [
+                                            [
+
+                                            ],
+                                            [
+
+                                            ],
+                                            [
+
+                                            ],
+                                            [
+
+                                            ],
+                                            [
+
+                                            ]
+                                        ],
+                                        [
+
+                                        ]
+                                    ],
+                                    [
+
+                                    ]
+                                ]
+                            ],
+    "IPSecCustomPolicy":  null,
+    "MachineCertificateIssuerFilter":  null,
+    "MachineCertificateEKUFilter":  null,
+    "ConnectionStatus":  "Disconnected",
+    "DnsSuffix":  "",
+    "Guid":  "{DACE231A-F0CF-4C69-B37E-1A298A2DDD07}",
+    "IdleDisconnectSeconds":  0,
+    "IsAutoTriggerEnabled":  false,
+    "Name":  "MyVPNConnection",
+    "ProfileType":  "Inbox",
+    "ProvisioningAuthority":  null,
+    "Proxy":  null,
+    "RememberCredential":  false,
+    "Routes":  [
+
+               ],
+    "ServerAddress":  "vpn.example.com",
+    "ServerList":  [
+
+                   ],
+    "SplitTunneling":  false,
+    "VpnTrigger":  {
+                       "CimClass":  {
+                                        "CimSuperClassName":  null,
+                                        "CimSuperClass":  null,
+                                        "CimClassProperties":  [
+                                                                   {
+                                                                       "Name":  "ApplicationID",
+                                                                       "Value":  null,
+                                                                       "CimType":  30,
+                                                                       "Flags":  "Property, NullValue",
+                                                                       "Qualifiers":  [
+                                                                                          {
+                                                                                              "Name":  "read",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "write",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          }
+                                                                                      ],
+                                                                       "ReferenceClassName":  null
+                                                                   },
+                                                                   {
+                                                                       "Name":  "ConnectionName",
+                                                                       "Value":  null,
+                                                                       "CimType":  14,
+                                                                       "Flags":  "Property, NullValue",
+                                                                       "Qualifiers":  [
+                                                                                          {
+                                                                                              "Name":  "read",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "write",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          }
+                                                                                      ],
+                                                                       "ReferenceClassName":  null
+                                                                   },
+                                                                   {
+                                                                       "Name":  "dnsConfig",
+                                                                       "Value":  null,
+                                                                       "CimType":  32,
+                                                                       "Flags":  "Property, NullValue",
+                                                                       "Qualifiers":  [
+                                                                                          {
+                                                                                              "Name":  "EmbeddedInstance",
+                                                                                              "Value":  "VpnConnectionTriggerDnsConfiguration",
+                                                                                              "CimType":  14,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "read",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "write",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          }
+                                                                                      ],
+                                                                       "ReferenceClassName":  "VpnConnectionTriggerDnsConfiguration"
+                                                                   },
+                                                                   {
+                                                                       "Name":  "DnsSuffixSearchList",
+                                                                       "Value":  null,
+                                                                       "CimType":  30,
+                                                                       "Flags":  "Property, NullValue",
+                                                                       "Qualifiers":  [
+                                                                                          {
+                                                                                              "Name":  "read",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "write",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          }
+                                                                                      ],
+                                                                       "ReferenceClassName":  null
+                                                                   },
+                                                                   {
+                                                                       "Name":  "TrustedNetwork",
+                                                                       "Value":  null,
+                                                                       "CimType":  30,
+                                                                       "Flags":  "Property, NullValue",
+                                                                       "Qualifiers":  [
+                                                                                          {
+                                                                                              "Name":  "read",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          },
+                                                                                          {
+                                                                                              "Name":  "write",
+                                                                                              "Value":  true,
+                                                                                              "CimType":  1,
+                                                                                              "Flags":  "EnableOverride, ToSubclass"
+                                                                                          }
+                                                                                      ],
+                                                                       "ReferenceClassName":  null
+                                                                   }
+                                                               ],
+                                        "CimClassQualifiers":  [
+                                                                   {
+                                                                       "Name":  "ClassVersion",
+                                                                       "Value":  "1.0",
+                                                                       "CimType":  14,
+                                                                       "Flags":  "EnableOverride, ToSubclass"
+                                                                   },
+                                                                   {
+                                                                       "Name":  "dynamic",
+                                                                       "Value":  true,
+                                                                       "CimType":  1,
+                                                                       "Flags":  "EnableOverride, ToSubclass"
+                                                                   },
+                                                                   {
+                                                                       "Name":  "locale",
+                                                                       "Value":  1033,
+                                                                       "CimType":  7,
+                                                                       "Flags":  "EnableOverride, Restricted"
+                                                                   },
+                                                                   {
+                                                                       "Name":  "provider",
+                                                                       "Value":  "VpnClientPSProvider",
+                                                                       "CimType":  14,
+                                                                       "Flags":  "EnableOverride, ToSubclass"
+                                                                   }
+                                                               ],
+                                        "CimClassMethods":  [
+
+                                                            ],
+                                        "CimSystemProperties":  {
+                                                                    "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                                                    "ServerName":  "340E6A59CB85",
+                                                                    "ClassName":  "VpnConnectionTrigger",
+                                                                    "Path":  null
+                                                                }
+                                    },
+                       "CimInstanceProperties":  [
+                                                     {
+                                                         "Name":  "ApplicationID",
+                                                         "Value":  null,
+                                                         "CimType":  30,
+                                                         "Flags":  "Property, NotModified, NullValue",
+                                                         "IsValueModified":  false
+                                                     },
+                                                     {
+                                                         "Name":  "ConnectionName",
+                                                         "Value":  "MyVPNConnection",
+                                                         "CimType":  14,
+                                                         "Flags":  "Property, NotModified",
+                                                         "IsValueModified":  false
+                                                     },
+                                                     {
+                                                         "Name":  "dnsConfig",
+                                                         "Value":  null,
+                                                         "CimType":  32,
+                                                         "Flags":  "Property, NotModified, NullValue",
+                                                         "IsValueModified":  false
+                                                     },
+                                                     {
+                                                         "Name":  "DnsSuffixSearchList",
+                                                         "Value":  null,
+                                                         "CimType":  30,
+                                                         "Flags":  "Property, NotModified, NullValue",
+                                                         "IsValueModified":  false
+                                                     },
+                                                     {
+                                                         "Name":  "TrustedNetwork",
+                                                         "Value":  null,
+                                                         "CimType":  30,
+                                                         "Flags":  "Property, NotModified, NullValue",
+                                                         "IsValueModified":  false
+                                                     }
+                                                 ],
+                       "CimSystemProperties":  {
+                                                   "Namespace":  "root/Microsoft/Windows/RemoteAccess/Client",
+                                                   "ServerName":  "340E6A59CB85",
+                                                   "ClassName":  "VpnConnectionTrigger",
+                                                   "Path":  null
+                                               }
+                   },
+    "AllUserConnection":  false,
+    "AuthenticationMethod":  [
+                                 "MsChapv2"
+                             ],
+    "EncryptionLevel":  "Optional",
+    "L2tpIPsecAuth":  null,
+    "NapState":  "NotConnected",
+    "TunnelType":  "Pptp",
+    "UseWinlogonCredential":  false,
+    "PSComputerName":  null
+}

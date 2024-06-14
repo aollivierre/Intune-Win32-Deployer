@@ -97,7 +97,8 @@ function Initialize-Environment {
         }
         else {
             $global:scriptBasePath = $PSScriptRoot
-            $global:modulesBasePath = "$PSScriptRoot\modules"
+            # $global:modulesBasePath = "$PSScriptRoot\modules"
+            $global:modulesBasePath = "c:\code\modules"
         }
     }
 
@@ -130,10 +131,18 @@ function Initialize-Environment {
         Import-Module $LinuxModulePath -Verbose
 
         # Convert paths from Windows to Linux format
-        $global:AOscriptDirectory = Convert-WindowsPathToLinuxPath -WindowsPath "C:\Users\Admin-Abdullah\AppData\Local\Intune-Win32-Deployer"
-        $global:directoryPath = Convert-WindowsPathToLinuxPath -WindowsPath "C:\Users\Admin-Abdullah\AppData\Local\Intune-Win32-Deployer\Win32Apps-DropBox"
-        $global:Repo_Path = Convert-WindowsPathToLinuxPath -WindowsPath "C:\Users\Admin-Abdullah\AppData\Local\Intune-Win32-Deployer"
-        $global:Repo_winget = "$global:Repo_Path\Win32Apps-DropBox"
+        # $global:AOscriptDirectory = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot"
+        # $global:directoryPath = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot\Win32Apps-DropBox"
+        # $global:Repo_Path = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot"
+        $global:IntuneWin32App = Convert-WindowsPathToLinuxPath -WindowsPath "C:\Code\IntuneWin32App\IntuneWin32App.psm1"
+
+        Import-Module $global:IntuneWin32App -Verbose -Global
+
+
+        $global:AOscriptDirectory = "$PSscriptroot"
+        $global:directoryPath ="$PSscriptroot/Win32Apps-DropBox"
+        $global:Repo_Path = "$PSscriptroot"
+        $global:Repo_winget = "$global:Repo_Path/Win32Apps-DropBox"
     }
 
     $platform = Get-Platform
@@ -227,7 +236,7 @@ Import-LatestModulesLocalRepository -ModulesFolderPath $ModulesFolderPath
 ############################################### END MODULE LOADING ############################################################
 ###############################################################################################################################
 try {
-    Ensure-LoggingFunctionExists
+    Ensure-LoggingFunctionExists -LoggingFunctionName "Write-EnhancedLog"
     # Continue with the rest of the script here
     # exit
 }

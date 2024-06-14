@@ -1,0 +1,21 @@
+
+
+Name                  : MyVPNConnection
+ServerAddress         : vpn.example.com
+AllUserConnection     : False
+Guid                  : {DACE231A-F0CF-4C69-B37E-1A298A2DDD07}
+TunnelType            : Pptp
+AuthenticationMethod  : {MsChapv2}
+EncryptionLevel       : Optional
+L2tpIPsecAuth         : 
+UseWinlogonCredential : False
+EapConfigXmlStream    : 
+ConnectionStatus      : Disconnected
+RememberCredential    : False
+SplitTunneling        : False
+DnsSuffix             : 
+IdleDisconnectSeconds : 0
+
+
+
+
