@@ -6,7 +6,6 @@
   "LoggingDeploymentName": "PR4B_IntuneWin32DeployerCustomlog",
   "ScriptMode": "Remediation",
   "RunOnDemand": false,
-  "UsePSADT": false,
   "TriggerType": "Daily",
   "LogonUserId": "administrator",
 

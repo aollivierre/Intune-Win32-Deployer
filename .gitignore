@@ -2,3 +2,5 @@
 *.pfx
 *.intunewin
 secrets.json
+*.key
+*.cer

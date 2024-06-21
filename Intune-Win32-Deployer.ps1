@@ -41,10 +41,28 @@ $env:MYMODULE_CONFIG_PATH = $configPath
 $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
 
 #  Variables from JSON file
-$tenantId = $secrets.tenantId
-$clientId = $secrets.clientId
+$tenantId = $secrets.TenantId
+$clientId = $secrets.ClientId
 
-$certPath = Join-Path -Path $PSScriptRoot -ChildPath 'graphcert.pfx'
+# $certPath = Join-Path -Path $PSScriptRoot -ChildPath 'graphcert.pfx'
+
+
+# Find any PFX file in the root directory of the script
+$pfxFiles = Get-ChildItem -Path $PSScriptRoot -Filter *.pfx
+
+if ($pfxFiles.Count -eq 0) {
+    Write-Error "No PFX file found in the root directory."
+    throw "No PFX file found"
+} elseif ($pfxFiles.Count -gt 1) {
+    Write-Error "Multiple PFX files found in the root directory. Please ensure there is only one PFX file."
+    throw "Multiple PFX files found"
+}
+
+# Use the first (and presumably only) PFX file found
+$certPath = $pfxFiles[0].FullName
+
+Write-Output "PFX file found: $certPath"
+
 $CertPassword = $secrets.CertPassword
 
 
@@ -229,7 +247,7 @@ Write-Host "Starting to call Get-ModulesScriptPathsAndVariables..."
 # $DotSourcinginitializationInfo | Format-List
 
 Write-Host "Starting to call Import-LatestModulesLocalRepository..."
-Import-LatestModulesLocalRepository -ModulesFolderPath $ModulesFolderPath
+Import-LatestModulesLocalRepository -ModulesFolderPath $ModulesFolderPath -ScriptPath $PSScriptRoot
 
 
 ###############################################################################################################################
