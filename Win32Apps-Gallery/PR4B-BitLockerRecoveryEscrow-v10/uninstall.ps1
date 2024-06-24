@@ -290,6 +290,7 @@ $InitializeScriptVariablesParams = @{
     Version                 = $Version
     ScriptMode              = $ScriptMode
     PackageExecutionContext = $PackageExecutionContext
+    RepetitionInterval      = $RepetitionInterval
 }
 
 $initializationInfo = Initialize-ScriptVariables @InitializeScriptVariablesParams
@@ -305,6 +306,7 @@ $global:Path_PR = $initializationInfo['Path_PR']
 $global:schtaskName = $initializationInfo['schtaskName']
 $global:schtaskDescription = $initializationInfo['schtaskDescription']
 $global:PackageExecutionContext = $initializationInfo['PackageExecutionContext']
+$global:RepetitionInterval = $initializationInfo['RepetitionInterval']
 
 
 

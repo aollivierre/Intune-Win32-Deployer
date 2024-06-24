@@ -38,7 +38,7 @@ $PackageName = $config.PackageName
 $PackageUniqueGUID = $config.PackageUniqueGUID
 $Version = $config.Version
 $PackageExecutionContext = $config.PackageExecutionContext
-# $RepetitionInterval = $config.RepetitionInterval
+$RepetitionInterval = $config.RepetitionInterval
 $ScriptMode = $config.ScriptMode
 
 
@@ -72,12 +72,12 @@ function Initialize-Environment {
         # Get the base paths from the global variables
         Setup-GlobalPaths
 
-       # Construct the paths dynamically using the base paths
-       $global:modulePath = Join-Path -Path $modulesBasePath -ChildPath $WindowsModulePath
-       $global:AOscriptDirectory = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
-       $global:directoryPath = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
-       $global:Repo_Path = $scriptBasePath
-       $global:Repo_winget = "$Repo_Path\Win32Apps-DropBox"
+        # Construct the paths dynamically using the base paths
+        $global:modulePath = Join-Path -Path $modulesBasePath -ChildPath $WindowsModulePath
+        $global:AOscriptDirectory = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
+        $global:directoryPath = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
+        $global:Repo_Path = $scriptBasePath
+        $global:Repo_winget = "$Repo_Path\Win32Apps-DropBox"
 
 
         # Import the module using the dynamically constructed path
@@ -173,8 +173,21 @@ Import-LatestModulesLocalRepository -ModulesFolderPath $ModulesFolderPath -Scrip
 ###############################################################################################################################
 ############################################### END MODULE LOADING ############################################################
 ###############################################################################################################################
+
+
 try {
-     Ensure-LoggingFunctionExists -LoggingFunctionName "Write-EnhancedLog"
+    $initResult = Initialize-ScriptAndLogging
+    Write-Host "Initialization successful. Log file path: $($initResult.LogFile)" -ForegroundColor Green
+}
+catch {
+    Write-Host "Initialization failed: $_" -ForegroundColor Red
+}
+
+
+
+
+try {
+    Ensure-LoggingFunctionExists -LoggingFunctionName "Write-EnhancedLog"
     # Continue with the rest of the script here
     # exit
 }
@@ -283,6 +296,7 @@ $InitializeScriptVariablesParams = @{
     Version                 = $Version
     ScriptMode              = $ScriptMode
     PackageExecutionContext = $PackageExecutionContext
+    RepetitionInterval      = $RepetitionInterval
 }
 
 $initializationInfo = Initialize-ScriptVariables @InitializeScriptVariablesParams
@@ -298,6 +312,7 @@ $global:Path_PR = $initializationInfo['Path_PR']
 $global:schtaskName = $initializationInfo['schtaskName']
 $global:schtaskDescription = $initializationInfo['schtaskDescription']
 $global:PackageExecutionContext = $initializationInfo['PackageExecutionContext']
+$global:RepetitionInterval = $initializationInfo['RepetitionInterval']
 
 
 
@@ -372,6 +387,8 @@ $CheckAndExecuteTaskparams = @{
     Path_PR                 = $global:Path_PR
     ScriptMode              = $global:ScriptMode # Assuming you have this variable defined globally
     PackageExecutionContext = $global:PackageExecutionContext # Assuming you have this variable defined globally
+    RepetitionInterval      = $global:RepetitionInterval # Assuming you have this variable defined globally
+    schtaskDescription      = $global:schtaskDescription # Assuming you have this variable defined globally
 }
 
 # Call the function using splatting with dynamically set global variables

@@ -2,13 +2,14 @@
 # JSON string
 $json = @'
 {
-  "PackageName": "PR4B_BitlockerRecoveryEscrow-v8",
+  "PackageName": "PR4B_BitlockerRecoveryEscrow-v10",
   "PackageUniqueGUID": "c793029f-08b5-496e-a79f-447a57babb71",
   "Version": 1,
   "PackageExecutionContext": "System",
-  "LoggingDeploymentName": "PR4B_BitlockerRecoveryEscrow-v8Customlog",
+  "LoggingDeploymentName": "PR4B_BitlockerRecoveryEscrow-v10Customlog",
   "ScriptMode": "Remediation",
   "RunOnDemand": false,
+  "RepetitionInterval": "PT60M" ,
   "UsePSADT": false,
   "TriggerType": "Daily",
   "LogonUserId": "administrator"

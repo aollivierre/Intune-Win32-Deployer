@@ -6,6 +6,7 @@
   "LoggingDeploymentName": "PR4B_BitlockerRecoveryEscrow-v10Customlog",
   "ScriptMode": "Remediation",
   "RunOnDemand": false,
+  "RepetitionInterval": "PT60M" ,
   "UsePSADT": false,
   "TriggerType": "Daily",
   "LogonUserId": "administrator"
