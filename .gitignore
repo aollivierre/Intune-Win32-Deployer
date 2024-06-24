@@ -4,3 +4,4 @@
 secrets.json
 *.key
 *.cer
+*.exe
