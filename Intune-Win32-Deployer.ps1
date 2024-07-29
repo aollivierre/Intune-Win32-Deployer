@@ -53,7 +53,8 @@ $pfxFiles = Get-ChildItem -Path $PSScriptRoot -Filter *.pfx
 if ($pfxFiles.Count -eq 0) {
     Write-Error "No PFX file found in the root directory."
     throw "No PFX file found"
-} elseif ($pfxFiles.Count -gt 1) {
+}
+elseif ($pfxFiles.Count -gt 1) {
     Write-Error "Multiple PFX files found in the root directory. Please ensure there is only one PFX file."
     throw "Multiple PFX files found"
 }
@@ -124,12 +125,12 @@ function Initialize-Environment {
         # Get the base paths from the global variables
         Setup-GlobalPaths
 
-       # Construct the paths dynamically using the base paths
-       $global:modulePath = Join-Path -Path $modulesBasePath -ChildPath $WindowsModulePath
-       $global:AOscriptDirectory = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
-       $global:directoryPath = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
-       $global:Repo_Path = $scriptBasePath
-       $global:Repo_winget = "$Repo_Path\Win32Apps-DropBox"
+        # Construct the paths dynamically using the base paths
+        $global:modulePath = Join-Path -Path $modulesBasePath -ChildPath $WindowsModulePath
+        $global:AOscriptDirectory = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
+        $global:directoryPath = Join-Path -Path $scriptBasePath -ChildPath "Win32Apps-DropBox"
+        $global:Repo_Path = $scriptBasePath
+        $global:Repo_winget = "$Repo_Path\Win32Apps-DropBox"
 
 
         # Import the module using the dynamically constructed path
@@ -158,7 +159,7 @@ function Initialize-Environment {
 
 
         $global:AOscriptDirectory = "$PSscriptroot"
-        $global:directoryPath ="$PSscriptroot/Win32Apps-DropBox"
+        $global:directoryPath = "$PSscriptroot/Win32Apps-DropBox"
         $global:Repo_Path = "$PSscriptroot"
         $global:Repo_winget = "$global:Repo_Path/Win32Apps-DropBox"
     }
@@ -281,6 +282,41 @@ InstallAndImportModulesPSGallery -moduleJsonPath "$PSScriptRoot/modules.json"
 ################################################ END MODULE CHECKING ###########################################################
 ################################################################################################################################
 
+
+#to address this bug in https://github.com/MSEndpointMgr/IntuneWin32App/issues/155 use the following function to update the Invoke-AzureStorageBlobUploadFinalize.ps1
+function Copy-InvokeAzureStorageBlobUploadFinalize {
+    param (
+        [string]$sourceFile = "C:\Code\IntuneWin32App\Private\Invoke-AzureStorageBlobUploadFinalize.ps1",
+        [string[]]$destinationPaths = @(
+            "C:\Users\Administrator\Documents\PowerShell\Modules\IntuneWin32App\1.4.4\Private\Invoke-AzureStorageBlobUploadFinalize.ps1",
+            "C:\Users\Administrator\Documents\WindowsPowerShell\Modules\IntuneWin32App\1.4.4\Private\Invoke-AzureStorageBlobUploadFinalize.ps1"
+        )
+    )
+
+    begin {
+        Write-EnhancedLog -Message "Starting the file copy process..." -Level "INFO"
+    }
+
+    process {
+        foreach ($destination in $destinationPaths) {
+            try {
+                Write-EnhancedLog -Message "Copying file to $destination" -Level "INFO"
+                Copy-Item -Path $sourceFile -Destination $destination -Force
+                Write-EnhancedLog -Message "Successfully copied to $destination" -Level "INFO"
+            } catch {
+                Write-EnhancedLog -Message "Failed to copy to $destination. Error: $_" -Level "ERROR"
+                Handle-Error -ErrorRecord $_
+            }
+        }
+    }
+
+    end {
+        Write-EnhancedLog -Message "File copy process completed." -Level "INFO"
+    }
+}
+
+Copy-InvokeAzureStorageBlobUploadFinalize
+
     
 ################################################################################################################################
 ################################################ END LOGGING ###################################################################
@@ -312,7 +348,18 @@ InstallAndImportModulesPSGallery -moduleJsonPath "$PSScriptRoot/modules.json"
 ################################################################################################################################
 ################################################ START GRAPH CONNECTING ########################################################
 ################################################################################################################################
-$accessToken = Connect-GraphWithCert -tenantId $tenantId -clientId $clientId -certPath $certPath -certPassword $certPassword
+# Define the splat for Connect-GraphWithCert
+$graphParams = @{
+    tenantId        = $tenantId
+    clientId        = $clientId
+    certPath        = $certPath
+    certPassword    = $certPassword
+    ConnectToIntune = $true
+    ConnectToTeams  = $false
+}
+
+# Connect to Microsoft Graph, Intune, and Teams
+$accessToken = Connect-GraphWithCert @graphParams
 
 Log-Params -Params @{accessToken = $accessToken }
 

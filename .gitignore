@@ -5,3 +5,6 @@ secrets.json
 *.key
 *.cer
 *.exe
+*.msi
+Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National-v2/FortiClient.msi
+Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National/FortiClient.msi

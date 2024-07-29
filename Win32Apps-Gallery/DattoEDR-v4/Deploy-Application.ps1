@@ -227,7 +227,7 @@ Try {
 
 
 
-        Execute-Process -Path "d.exe" -Parameters "--key sscsmjflyc --url https://rmmvid81500001.infocyte.com" -WindowStyle 'Hidden'
+        Execute-Process -Path "d.exe" -Parameters "--key 667ui7yht7 --url https://rmmvid81500001.infocyte.com" -WindowStyle 'Hidden'
         # Execute-Process -Path "setup.exe" -Parameters "/sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES" -WindowStyle 'Hidden'
 
 
