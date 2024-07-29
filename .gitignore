@@ -8,3 +8,11 @@ secrets.json
 *.msi
 Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National-v2/FortiClient.msi
 Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National/FortiClient.msi
+Win32Apps-Dropbox-Archive/FortiClientEMS-v7-CBA-National-v1/Modules/
+Win32Apps-Dropbox-Archive/FortiClientEMS-v7-CBA-National-v2/Modules/
+Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National-v2/Modules/
+Win32Apps-Dropbox-Archive/FortiClientVPNv5_CBA_National/Modules/
+Win32Apps-Dropbox/FortiClientEMS-v7-CBA-National-v3/Modules/
+Win32Apps-Dropbox/FortiClientVPNv5_CBA_National-v3/Modules/
+Win32Apps-Gallery/FortiClientEMS-v7-CBA-National-v1/Modules/
+Win32Apps-Gallery/FortiClientVPNv5_CBA_National/Modules/
