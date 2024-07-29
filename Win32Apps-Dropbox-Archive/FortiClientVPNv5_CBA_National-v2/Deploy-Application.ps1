@@ -1,5 +1,4 @@
-#Unique Tracking ID: 63dce23a-4756-4604-9113-66885e8e3cfe, Timestamp: 2024-04-04 18:30:45
-<#
+﻿<#
 .SYNOPSIS
 
 PSApppDeployToolkit - This script performs the installation or uninstallation of an application(s).
@@ -12,7 +11,7 @@ PSApppDeployToolkit - This script performs the installation or uninstallation of
 
 The script dot-sources the AppDeployToolkitMain.ps1 script which contains the logic and functions required to install or uninstall an application.
 
-PSApppDeployToolkit is licensed under the GNU LGPLv3 License - (C) 2023 PSAppDeployToolkit Team (Sean Lillis, Dan Cunningham and Muhammad Mashwani).
+PSApppDeployToolkit is licensed under the GNU LGPLv3 License - (C) 2024 PSAppDeployToolkit Team (Sean Lillis, Dan Cunningham and Muhammad Mashwani).
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the
 Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but
@@ -87,7 +86,7 @@ Param (
     [String]$DeploymentType = 'Install',
     [Parameter(Mandatory = $false)]
     [ValidateSet('Interactive', 'Silent', 'NonInteractive')]
-    [String]$DeployMode = 'Silent',
+    [String]$DeployMode = 'Interactive',
     [Parameter(Mandatory = $false)]
     [switch]$AllowRebootPassThru = $false,
     [Parameter(Mandatory = $false)]
@@ -100,23 +99,22 @@ Try {
     ## Set the script execution policy for this process
     Try {
         Set-ExecutionPolicy -ExecutionPolicy 'ByPass' -Scope 'Process' -Force -ErrorAction 'Stop'
-    }
-    Catch {
+    } Catch {
     }
 
     ##*===============================================
     ##* VARIABLE DECLARATION
     ##*===============================================
     ## Variables: Application
-    [String]$appVendor = ''
-    [String]$appName = ''
-    [String]$appVersion = ''
+    [String]$appVendor = 'Fortinet'
+    [String]$appName = 'FortiClient VPN'
+    [String]$appVersion = '7.4.0.1658'
     [String]$appArch = ''
     [String]$appLang = 'EN'
     [String]$appRevision = '01'
     [String]$appScriptVersion = '1.0.0'
-    [String]$appScriptDate = 'XX/XX/20XX'
-    [String]$appScriptAuthor = '<author name>'
+    [String]$appScriptDate = '22/07/2024'
+    [String]$appScriptAuthor = 'AOllivierre'
     ##*===============================================
     ## Variables: Install Titles (Only set here to override defaults set by the toolkit)
     [String]$installName = ''
@@ -130,15 +128,14 @@ Try {
 
     ## Variables: Script
     [String]$deployAppScriptFriendlyName = 'Deploy Application'
-    [Version]$deployAppScriptVersion = [Version]'3.9.3'
-    [String]$deployAppScriptDate = '02/05/2023'
+    [Version]$deployAppScriptVersion = [Version]'3.10.1'
+    [String]$deployAppScriptDate = '05/03/2024'
     [Hashtable]$deployAppScriptParameters = $PsBoundParameters
 
     ## Variables: Environment
     If (Test-Path -LiteralPath 'variable:HostInvocation') {
         $InvocationInfo = $HostInvocation
-    }
-    Else {
+    } Else {
         $InvocationInfo = $MyInvocation
     }
     [String]$scriptDirectory = Split-Path -Path $InvocationInfo.MyCommand.Definition -Parent
@@ -151,12 +148,10 @@ Try {
         }
         If ($DisableLogging) {
             . $moduleAppDeployToolkitMain -DisableLogging
-        }
-        Else {
+        } Else {
             . $moduleAppDeployToolkitMain
         }
-    }
-    Catch {
+    } Catch {
         If ($mainExitCode -eq 0) {
             [Int32]$mainExitCode = 60008
         }
@@ -164,8 +159,7 @@ Try {
         ## Exit the script, returning the exit code to SCCM
         If (Test-Path -LiteralPath 'variable:HostInvocation') {
             $script:ExitCode = $mainExitCode; Exit
-        }
-        Else {
+        } Else {
             Exit $mainExitCode
         }
     }
@@ -175,6 +169,185 @@ Try {
     ##*===============================================
     ##* END VARIABLE DECLARATION
     ##*===============================================
+
+
+
+    # Read configuration from the JSON file
+    # Assign values from JSON to variables
+
+    # Read configuration from the JSON file
+    $configPath = Join-Path -Path $PSScriptRoot -ChildPath 'config.json'
+    $env:MYMODULE_CONFIG_PATH = $configPath
+
+    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+
+    function Initialize-Environment {
+        param (
+            [string]$WindowsModulePath = 'EnhancedBoilerPlateAO\2.0.0\EnhancedBoilerPlateAO.psm1',
+            [string]$LinuxModulePath = '/usr/src/code/Modules/EnhancedBoilerPlateAO/2.0.0/EnhancedBoilerPlateAO.psm1'
+        )
+
+        function Get-Platform {
+            if ($PSVersionTable.PSVersion.Major -ge 7) {
+                return $PSVersionTable.Platform
+            } else {
+                return [System.Environment]::OSVersion.Platform
+            }
+        }
+
+        function Setup-GlobalPaths {
+            if ($env:DOCKER_ENV -eq $true) {
+                $global:scriptBasePath = $env:SCRIPT_BASE_PATH
+                $global:modulesBasePath = $env:MODULES_BASE_PATH
+            } else {
+                $global:scriptBasePath = $PSScriptRoot
+                $global:modulesBasePath = "$PSScriptRoot\modules"
+                # $global:modulesBasePath = "c:\code\modules"
+            }
+        }
+
+        function Setup-WindowsEnvironment {
+            # Get the base paths from the global variables
+            Setup-GlobalPaths
+
+            # Construct the paths dynamically using the base paths
+            $global:modulePath = Join-Path -Path $modulesBasePath -ChildPath $WindowsModulePath
+            $global:AOscriptDirectory = Join-Path -Path $scriptBasePath -ChildPath 'Win32Apps-DropBox'
+            $global:directoryPath = Join-Path -Path $scriptBasePath -ChildPath 'Win32Apps-DropBox'
+            $global:Repo_Path = $scriptBasePath
+            $global:Repo_winget = "$Repo_Path\Win32Apps-DropBox"
+
+
+            # Import the module using the dynamically constructed path
+            Import-Module -Name $global:modulePath -Verbose -Force:$true -Global:$true
+
+            # Log the paths to verify
+            Write-Output "Module Path: $global:modulePath"
+            Write-Output "Repo Path: $global:Repo_Path"
+            Write-Output "Repo Winget Path: $global:Repo_winget"
+        }
+
+        function Setup-LinuxEnvironment {
+            # Get the base paths from the global variables
+            Setup-GlobalPaths
+
+            # Import the module using the Linux path
+            Import-Module $LinuxModulePath -Verbose
+
+            # Convert paths from Windows to Linux format
+            $global:AOscriptDirectory = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot"
+            $global:directoryPath = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot\Win32Apps-DropBox"
+            $global:Repo_Path = Convert-WindowsPathToLinuxPath -WindowsPath "$PSscriptroot"
+            $global:Repo_winget = "$global:Repo_Path\Win32Apps-DropBox"
+        }
+
+        $platform = Get-Platform
+        if ($platform -eq 'Win32NT' -or $platform -eq [System.PlatformID]::Win32NT) {
+            Setup-WindowsEnvironment
+        } elseif ($platform -eq 'Unix' -or $platform -eq [System.PlatformID]::Unix) {
+            Setup-LinuxEnvironment
+        } else {
+            throw 'Unsupported operating system'
+        }
+    }
+
+    # Call the function to initialize the environment
+    Initialize-Environment
+
+
+    # Example usage of global variables outside the function
+    Write-Output 'Global variables set by Initialize-Environment:'
+    Write-Output "scriptBasePath: $scriptBasePath"
+    Write-Output "modulesBasePath: $modulesBasePath"
+    Write-Output "modulePath: $modulePath"
+    Write-Output "AOscriptDirectory: $AOscriptDirectory"
+    Write-Output "directoryPath: $directoryPath"
+    Write-Output "Repo_Path: $Repo_Path"
+    Write-Output "Repo_winget: $Repo_winget"
+
+    #################################################################################################################################
+    ################################################# END VARIABLES #################################################################
+    #################################################################################################################################
+
+    ###############################################################################################################################
+    ############################################### START MODULE LOADING ##########################################################
+    ###############################################################################################################################
+
+    <#
+.SYNOPSIS
+Dot-sources all PowerShell scripts in the 'private' folder relative to the script root.
+
+.DESCRIPTION
+This function finds all PowerShell (.ps1) scripts in a 'private' folder located in the script root directory and dot-sources them. It logs the process, including any errors encountered, with optional color coding.
+
+.EXAMPLE
+Dot-SourcePrivateScripts
+
+Dot-sources all scripts in the 'private' folder and logs the process.
+
+.NOTES
+Ensure the Write-EnhancedLog function is defined before using this function for logging purposes.
+#>
+
+
+    Write-Host 'Starting to call Get-ModulesFolderPath...'
+
+    # Store the outcome in $ModulesFolderPath
+    try {
+  
+        # $ModulesFolderPath = Get-ModulesFolderPath -WindowsPath "C:\code\modules" -UnixPath "/usr/src/code/modules"
+        $ModulesFolderPath = Get-ModulesFolderPath -WindowsPath "$PsScriptRoot\modules" -UnixPath "$PsScriptRoot/modules"
+        Write-Host "Modules folder path: $ModulesFolderPath"
+
+    } catch {
+        Write-Error $_.Exception.Message
+    }
+
+
+    Write-Host 'Starting to call Import-LatestModulesLocalRepository...'
+    Import-LatestModulesLocalRepository -ModulesFolderPath $ModulesFolderPath -ScriptPath $PSScriptRoot
+
+    ###############################################################################################################################
+    ############################################### END MODULE LOADING ############################################################
+    ###############################################################################################################################
+    try {
+        # Ensure-LoggingFunctionExists -LoggingFunctionName "# Write-EnhancedLog"
+        # Continue with the rest of the script here
+        # exit
+    } catch {
+        Write-Host "Critical error: $_" -ForegroundColor Red
+        exit
+    }
+
+    ###############################################################################################################################
+    ###############################################################################################################################
+    ###############################################################################################################################
+
+    # Setup logging
+    Write-EnhancedLog -Message 'Script Started' -Level 'INFO'
+
+    ################################################################################################################################
+    ################################################################################################################################
+    ################################################################################################################################
+
+
+    # ################################################################################################################################
+    # ############### CALLING AS SYSTEM to simulate Intune deployment as SYSTEM (Uncomment for debugging) ############################
+    # ################################################################################################################################
+
+    # Example usage
+    $privateFolderPath = Join-Path -Path $PSScriptRoot -ChildPath 'private'
+    $PsExec64Path = Join-Path -Path $privateFolderPath -ChildPath 'PsExec64.exe'
+    $ScriptToRunAsSystem = $MyInvocation.MyCommand.Path
+
+    Ensure-RunningAsSystem -PsExec64Path $PsExec64Path -ScriptPath $ScriptToRunAsSystem -TargetFolder $privateFolderPath
+
+    # ################################################################################################################################
+    # ############### END CALLING AS SYSTEM to simulate Intune deployment as SYSTEM (Uncomment for debugging) ########################
+    # ################################################################################################################################
+
+
+
 
     If ($deploymentType -ine 'Uninstall' -and $deploymentType -ine 'Repair') {
         ##*===============================================
@@ -197,38 +370,22 @@ Try {
         [String]$installPhase = 'Installation'
 
         ## Handle Zero-Config MSI Installations
-        # If ($useDefaultMsi) {
-        #     [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) {
-        #         $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
-        #     }
-        #     Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) {
-        #         $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ }
-        #     }
-        # }
-
-
-
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) {
+                $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ }
+            }
+        }
 
         ## <Perform Installation tasks here>
 
 
-        # C:\code\AdobePro-v1\Files\setup.exe /sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES
 
-        # C:\code\AdobePro-v1\Files\setup.exe /sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES
+        $scriptDirectory = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+        Start-Process -FilePath 'MsiExec.exe' -ArgumentList "/i `"$scriptDirectory\FortiClient.msi`" /quiet /norestart" -Wait
 
-        # # Define the setup file relative to this script's location
-        # $setupExePath = Join-Path -Path $PSScriptRoot -ChildPath "Files\setup.exe"
-
-        # # Define the arguments for the setup
-        # $setupArgs = "/sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES"
-
-        # # Start the setup process
-        # Start-Process -FilePath $setupExePath -ArgumentList $setupArgs -NoNewWindow -Wait
-
-
-
-        Execute-Process -Path "d.exe" -Parameters "--key 667ui7yht7 --url https://rmmvid81500001.infocyte.com" -WindowStyle 'Hidden'
-        # Execute-Process -Path "setup.exe" -Parameters "/sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES" -WindowStyle 'Hidden'
 
 
 
@@ -256,7 +413,7 @@ Try {
                                 Write-Output "Found $SoftwareName version $installedVersion at $item.PsPath."
                                 return @{
                                     IsInstalled = $true
-                                    Version = $app.DisplayVersion
+                                    Version     = $app.DisplayVersion
                                     ProductCode = $app.PSChildName
                                 }
                             }
@@ -269,7 +426,7 @@ Try {
             }
         
             Write-Output "Timeout reached. $SoftwareName version $MinimumVersion or later not found."
-            return @{IsInstalled = $false}
+            return @{IsInstalled = $false }
         }
         
         
@@ -278,24 +435,29 @@ Try {
 
         # Define constants for registry paths and minimum required version
         $registryPaths = @(
-            "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
-            "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+            'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
         )
-        $targetSoftwareName = "*Datto EDR Agent*"
-        $minimumVersion = New-Object Version "3.8.0.1850"
+        $targetSoftwareName = '*FortiClient*'
+        $minimumVersion = New-Object Version '7.4.0.1658'        
 
         # Main script execution block
         $installationCheck = WaitForRegistryKey -RegistryPaths $registryPaths -SoftwareName $targetSoftwareName -MinimumVersion $minimumVersion -TimeoutSeconds 120
 
         if ($installationCheck.IsInstalled) {
-            # Write-Output "DattoEDRAgent version $($installationCheck.Version) or later is installed."
+            # Write-Output "FortiClientVPN version $($installationCheck.Version) or later is installed."
             # exit 0
-        }
-        else {
-            # Write-Output "DattoEDRAgent version $minimumVersion or later is not installed."
+        } else {
+            # Write-Output "FortiClientVPN version $minimumVersion or later is not installed."
             # exit 1
         }
 
+
+
+
+
+
+        Start-Process -FilePath 'reg.exe' -ArgumentList "import `"$scriptDirectory\CBA_National_SSL_VPN_SAML.reg`"" -Wait
 
 
         ##*===============================================
@@ -307,10 +469,9 @@ Try {
 
         ## Display a message at the end of the install
         If (-not $useDefaultMsi) {
-            Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait
+            Show-InstallationPrompt -Message 'You should now see FortiClient VPN v7.4.0.1658 in your task bar' -ButtonRightText 'OK' -Icon Information -NoWait
         }
-    }
-    ElseIf ($deploymentType -ieq 'Uninstall') {
+    } ElseIf ($deploymentType -ieq 'Uninstall') {
         ##*===============================================
         ##* PRE-UNINSTALLATION
         ##*===============================================
@@ -330,22 +491,17 @@ Try {
         ##*===============================================
         [String]$installPhase = 'Uninstallation'
 
-        # Handle Zero-Config MSI Uninstallations
-        # If ($useDefaultMsi) {
-        #     [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
-        #         $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
-        #     }
-        #     Execute-MSI @ExecuteDefaultMSISplat
-        # }
+        ## Handle Zero-Config MSI Uninstallations
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat
+        }
 
-        # <Perform Uninstallation tasks here>
+        ## <Perform Uninstallation tasks here>
 
-        Execute-Process -Path "C:\Program Files\infocyte\agent\agent.exe" -Parameters  "--uninstall" -WindowStyle 'Hidden'
-        
-
-
-
-
+        Start-Process -FilePath 'MsiExec.exe' -ArgumentList '/X{0DC51760-4FB7-41F3-8967-D3DEC9D320EB} /quiet /forcerestart'
 
 
         ##*===============================================
@@ -356,8 +512,7 @@ Try {
         ## <Perform Post-Uninstallation tasks here>
 
 
-    }
-    ElseIf ($deploymentType -ieq 'Repair') {
+    } ElseIf ($deploymentType -ieq 'Repair') {
         ##*===============================================
         ##* PRE-REPAIR
         ##*===============================================
@@ -400,8 +555,7 @@ Try {
 
     ## Call the Exit-Script function to perform final cleanup operations
     Exit-Script -ExitCode $mainExitCode
-}
-Catch {
+} Catch {
     [Int32]$mainExitCode = 60001
     [String]$mainErrorMessage = "$(Resolve-Error)"
     Write-Log -Message $mainErrorMessage -Severity 3 -Source $deployAppScriptFriendlyName

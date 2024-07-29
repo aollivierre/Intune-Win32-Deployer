@@ -1,5 +1,4 @@
-#Unique Tracking ID: 63dce23a-4756-4604-9113-66885e8e3cfe, Timestamp: 2024-04-04 18:30:45
-<#
+﻿<#
 .SYNOPSIS
 
 PSApppDeployToolkit - This script performs the installation or uninstallation of an application(s).
@@ -12,7 +11,7 @@ PSApppDeployToolkit - This script performs the installation or uninstallation of
 
 The script dot-sources the AppDeployToolkitMain.ps1 script which contains the logic and functions required to install or uninstall an application.
 
-PSApppDeployToolkit is licensed under the GNU LGPLv3 License - (C) 2023 PSAppDeployToolkit Team (Sean Lillis, Dan Cunningham and Muhammad Mashwani).
+PSApppDeployToolkit is licensed under the GNU LGPLv3 License - (C) 2024 PSAppDeployToolkit Team (Sean Lillis, Dan Cunningham and Muhammad Mashwani).
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the
 Free Software Foundation, either version 3 of the License, or any later version. This program is distributed in the hope that it will be useful, but
@@ -87,7 +86,7 @@ Param (
     [String]$DeploymentType = 'Install',
     [Parameter(Mandatory = $false)]
     [ValidateSet('Interactive', 'Silent', 'NonInteractive')]
-    [String]$DeployMode = 'Silent',
+    [String]$DeployMode = 'Interactive',
     [Parameter(Mandatory = $false)]
     [switch]$AllowRebootPassThru = $false,
     [Parameter(Mandatory = $false)]
@@ -108,15 +107,15 @@ Try {
     ##* VARIABLE DECLARATION
     ##*===============================================
     ## Variables: Application
-    [String]$appVendor = ''
-    [String]$appName = ''
-    [String]$appVersion = ''
+    [String]$appVendor = 'Fortinet'
+    [String]$appName = 'FortiClient EMS'
+    [String]$appVersion = 'Any older than V7.4'
     [String]$appArch = ''
     [String]$appLang = 'EN'
     [String]$appRevision = '01'
     [String]$appScriptVersion = '1.0.0'
-    [String]$appScriptDate = 'XX/XX/20XX'
-    [String]$appScriptAuthor = '<author name>'
+    [String]$appScriptDate = '22/07/2024'
+    [String]$appScriptAuthor = 'AOllivierre'
     ##*===============================================
     ## Variables: Install Titles (Only set here to override defaults set by the toolkit)
     [String]$installName = ''
@@ -130,8 +129,8 @@ Try {
 
     ## Variables: Script
     [String]$deployAppScriptFriendlyName = 'Deploy Application'
-    [Version]$deployAppScriptVersion = [Version]'3.9.3'
-    [String]$deployAppScriptDate = '02/05/2023'
+    [Version]$deployAppScriptVersion = [Version]'3.10.1'
+    [String]$deployAppScriptDate = '05/03/2024'
     [Hashtable]$deployAppScriptParameters = $PsBoundParameters
 
     ## Variables: Environment
@@ -197,38 +196,22 @@ Try {
         [String]$installPhase = 'Installation'
 
         ## Handle Zero-Config MSI Installations
-        # If ($useDefaultMsi) {
-        #     [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) {
-        #         $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
-        #     }
-        #     Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) {
-        #         $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ }
-        #     }
-        # }
-
-
-
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Install'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat; If ($defaultMspFiles) {
+                $defaultMspFiles | ForEach-Object { Execute-MSI -Action 'Patch' -Path $_ }
+            }
+        }
 
         ## <Perform Installation tasks here>
 
 
-        # C:\code\AdobePro-v1\Files\setup.exe /sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES
 
-        # C:\code\AdobePro-v1\Files\setup.exe /sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES
+        $scriptDirectory = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+        Start-Process -FilePath "$scriptDirectory\FortiClientSetup_7.2.3_x64.exe" -ArgumentList "/quiet /norestart" -wait -WindowStyle Hidden
 
-        # # Define the setup file relative to this script's location
-        # $setupExePath = Join-Path -Path $PSScriptRoot -ChildPath "Files\setup.exe"
-
-        # # Define the arguments for the setup
-        # $setupArgs = "/sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES"
-
-        # # Start the setup process
-        # Start-Process -FilePath $setupExePath -ArgumentList $setupArgs -NoNewWindow -Wait
-
-
-
-        Execute-Process -Path "d.exe" -Parameters "--key 667ui7yht7 --url https://rmmvid81500001.infocyte.com" -WindowStyle 'Hidden'
-        # Execute-Process -Path "setup.exe" -Parameters "/sAll /rs /rps /msi /norestart /quiet EULA_ACCEPT=YES" -WindowStyle 'Hidden'
 
 
 
@@ -256,7 +239,7 @@ Try {
                                 Write-Output "Found $SoftwareName version $installedVersion at $item.PsPath."
                                 return @{
                                     IsInstalled = $true
-                                    Version = $app.DisplayVersion
+                                    Version     = $app.DisplayVersion
                                     ProductCode = $app.PSChildName
                                 }
                             }
@@ -269,7 +252,7 @@ Try {
             }
         
             Write-Output "Timeout reached. $SoftwareName version $MinimumVersion or later not found."
-            return @{IsInstalled = $false}
+            return @{IsInstalled = $false }
         }
         
         
@@ -281,21 +264,28 @@ Try {
             "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
             "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
         )
-        $targetSoftwareName = "*Datto EDR Agent*"
-        $minimumVersion = New-Object Version "3.8.0.1850"
+        $targetSoftwareName = "*FortiClient*"
+        $minimumVersion = New-Object Version "7.2.3"
+           
 
         # Main script execution block
         $installationCheck = WaitForRegistryKey -RegistryPaths $registryPaths -SoftwareName $targetSoftwareName -MinimumVersion $minimumVersion -TimeoutSeconds 120
 
         if ($installationCheck.IsInstalled) {
-            # Write-Output "DattoEDRAgent version $($installationCheck.Version) or later is installed."
+            # Write-Output "FortiClientVPN version $($installationCheck.Version) or later is installed."
             # exit 0
         }
         else {
-            # Write-Output "DattoEDRAgent version $minimumVersion or later is not installed."
+            # Write-Output "FortiClientVPN version $minimumVersion or later is not installed."
             # exit 1
         }
 
+
+
+
+
+
+        Start-Process -FilePath "reg.exe" -ArgumentList "import `"$scriptDirectory\CBA_National_SSL_VPN_NON_SAML.reg`"" -Wait
 
 
         ##*===============================================
@@ -307,7 +297,7 @@ Try {
 
         ## Display a message at the end of the install
         If (-not $useDefaultMsi) {
-            Show-InstallationPrompt -Message 'You can customize text to appear at the end of an install or remove it completely for unattended installations.' -ButtonRightText 'OK' -Icon Information -NoWait
+            Show-InstallationPrompt -Message 'You should now see that any FortiClient VPN that is not v7.4.0.1658 is gone from your task bar' -ButtonRightText 'OK' -Icon Information -NoWait
         }
     }
     ElseIf ($deploymentType -ieq 'Uninstall') {
@@ -330,22 +320,193 @@ Try {
         ##*===============================================
         [String]$installPhase = 'Uninstallation'
 
-        # Handle Zero-Config MSI Uninstallations
-        # If ($useDefaultMsi) {
-        #     [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
-        #         $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
-        #     }
-        #     Execute-MSI @ExecuteDefaultMSISplat
-        # }
+        ## Handle Zero-Config MSI Uninstallations
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat
+        }
 
-        # <Perform Uninstallation tasks here>
+   
 
-        Execute-Process -Path "C:\Program Files\infocyte\agent\agent.exe" -Parameters  "--uninstall" -WindowStyle 'Hidden'
-        
+        # Start-Process -FilePath "MsiExec.exe" -ArgumentList "/X{0DC51760-4FB7-41F3-8967-D3DEC9D320EB} /quiet /forcerestart"
+
+        ## <Perform Uninstallation tasks here>
+
+        Start-Process -FilePath "$scriptDirectory\FortiClientSetup_7.2.3_x64.exe" -ArgumentList "/uninstallfamily /quiet" -Wait
+
+
+        #*****************************************************************************
+        #********************Uninstall Forticlient / Scrapping it ********************
+        #*****************************************************************************
+ 
+        # Retrieve the IdentifyingNumber for software with "forti" in the name
+ 
+        $identifyingNumber = Get-CimInstance -ClassName Win32_Product | Where-Object { $_.Name -like "*forti*" } | Select-Object -ExpandProperty IdentifyingNumber
+        # Execute MsiZap.Exe with the retrieved GUID &&  YOU CAN SPECIFY THE PATH FOR THE MSIZAP HERE AFTER DEPLOYED TO LOCAL COMPUTER OF ENDUSERS
+ 
+        if ($identifyingNumber) {
+ 
+            Start-Process -FilePath "$scriptDirectory\MsiZap.Exe" -ArgumentList "TW! $identifyingNumber" -Verb RunAs -Wait
+ 
+        }
+        else {
+ 
+            Write-Host "No matching software found."
+ 
+        }
 
 
 
 
+        #  Start-Process -FilePath "MsiExec.exe" -ArgumentList "/X{611804A7-F14E-45A2-9F55-345D33EDD28E} /quiet /forcerestart" -Wait
+
+
+        ##*===============================================
+        ##* POST-UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Post-Uninstallation'
+
+        ## <Perform Post-Uninstallation tasks here>
+        $minimumVersion = New-Object Version "7.4.0.1658"        
+
+        # Main script execution block
+        $installationCheck = WaitForRegistryKey -RegistryPaths $registryPaths -SoftwareName $targetSoftwareName -MinimumVersion $minimumVersion -TimeoutSeconds 120
+
+        if ($installationCheck.IsInstalled) {
+            # Write-Output "FortiClientVPN version $($installationCheck.Version) or later is installed."
+            # exit 0
+        }
+        else {
+            # Write-Output "FortiClientVPN version $minimumVersion or later is not installed."
+            # exit 1
+        }
+
+
+
+
+
+
+        # Start-Process -FilePath "reg.exe" -ArgumentList "import `"$scriptDirectory\CBA_National_SSL_VPN_NON_SAML.reg`"" -Wait
+
+
+        ##*===============================================
+        ##* POST-INSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Post-Installation'
+
+        ## <Perform Post-Installation tasks here>
+
+        ## Display a message at the end of the install
+        If (-not $useDefaultMsi) {
+            Show-InstallationPrompt -Message 'You should now see FortiClient VPN v7.4.0.1658 in your task bar' -ButtonRightText 'OK' -Icon Information -NoWait
+        }
+    }
+    ElseIf ($deploymentType -ieq 'Uninstall') {
+        ##*===============================================
+        ##* PRE-UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Pre-Uninstallation'
+
+        ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
+        Show-InstallationWelcome -CloseApps 'iexplore' -CloseAppsCountdown 60
+
+        ## Show Progress Message (with the default message)
+        Show-InstallationProgress
+
+        ## <Perform Pre-Uninstallation tasks here>
+
+
+        ##*===============================================
+        ##* UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Uninstallation'
+
+        ## Handle Zero-Config MSI Uninstallations
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat
+        }
+
+        ## <Perform Uninstallation tasks here>
+
+        Start-Process -FilePath "MsiExec.exe" -ArgumentList "/X{0DC51760-4FB7-41F3-8967-D3DEC9D320EB} /quiet /forcerestart"
+
+
+        ##*===============================================
+        ##* POST-UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Post-Uninstallation'
+
+        ## <Perform Post-Uninstallation tasks here>
+        $minimumVersion = New-Object Version "7.4.0.1658"        
+
+        # Main script execution block
+        $installationCheck = WaitForRegistryKey -RegistryPaths $registryPaths -SoftwareName $targetSoftwareName -MinimumVersion $minimumVersion -TimeoutSeconds 120
+
+        if ($installationCheck.IsInstalled) {
+            # Write-Output "FortiClientVPN version $($installationCheck.Version) or later is installed."
+            # exit 0
+        }
+        else {
+            # Write-Output "FortiClientVPN version $minimumVersion or later is not installed."
+            # exit 1
+        }
+
+
+
+
+
+
+        Start-Process -FilePath "reg.exe" -ArgumentList "import `"$scriptDirectory\CBA_National_SSL_VPN_NON_SAML.reg`"" -Wait
+
+
+        ##*===============================================
+        ##* POST-INSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Post-Installation'
+
+        ## <Perform Post-Installation tasks here>
+
+        ## Display a message at the end of the install
+        If (-not $useDefaultMsi) {
+            Show-InstallationPrompt -Message 'You should now see FortiClient VPN v7.4.0.1658 in your task bar' -ButtonRightText 'OK' -Icon Information -NoWait
+        }
+    }
+    ElseIf ($deploymentType -ieq 'Uninstall') {
+        ##*===============================================
+        ##* PRE-UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Pre-Uninstallation'
+
+        ## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
+        Show-InstallationWelcome -CloseApps 'iexplore' -CloseAppsCountdown 60
+
+        ## Show Progress Message (with the default message)
+        Show-InstallationProgress
+
+        ## <Perform Pre-Uninstallation tasks here>
+
+
+        ##*===============================================
+        ##* UNINSTALLATION
+        ##*===============================================
+        [String]$installPhase = 'Uninstallation'
+
+        ## Handle Zero-Config MSI Uninstallations
+        If ($useDefaultMsi) {
+            [Hashtable]$ExecuteDefaultMSISplat = @{ Action = 'Uninstall'; Path = $defaultMsiFile }; If ($defaultMstFile) {
+                $ExecuteDefaultMSISplat.Add('Transform', $defaultMstFile)
+            }
+            Execute-MSI @ExecuteDefaultMSISplat
+        }
+
+        ## <Perform Uninstallation tasks here>
+
+        Start-Process -FilePath "MsiExec.exe" -ArgumentList "/X{0DC51760-4FB7-41F3-8967-D3DEC9D320EB} /quiet /forcerestart"
 
 
         ##*===============================================
