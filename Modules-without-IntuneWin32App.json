@@ -7,7 +7,6 @@
         "powershell-yaml" , 
         "PSWriteHTML",
         "MSAL.PS",
-        "IntuneWin32App",
         "Microsoft.Graph.Groups",
         "SvRooij.ContentPrep.Cmdlet"
     ],
@@ -20,7 +19,6 @@
         "powershell-yaml" , 
         "PSWriteHTML",
         "MSAL.PS",
-        "IntuneWin32App",
         "Microsoft.Graph.Groups",
         "SvRooij.ContentPrep.Cmdlet"
     ]
