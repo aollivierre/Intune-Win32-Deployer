@@ -17,8 +17,8 @@
   "CompanyPortalFeaturedApp": "true",
   "InstallExperience": "system",
   "RestartBehavior": "suppress",
-  "PSADT": "false",
-  "serviceUIPSADT": "false",
+  "PSADT": "true",
+  "serviceUIPSADT": "true",
   "InformationURL": "https://placeholder.com/info",
   "PrivacyURL": "https://placeholder.com/privacy",
   "PrinterInstall": "false"

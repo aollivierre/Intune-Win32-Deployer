@@ -312,7 +312,18 @@ InstallAndImportModulesPSGallery -moduleJsonPath "$PSScriptRoot/modules.json"
 ################################################################################################################################
 ################################################ START GRAPH CONNECTING ########################################################
 ################################################################################################################################
-$accessToken = Connect-GraphWithCert -tenantId $tenantId -clientId $clientId -certPath $certPath -certPassword $certPassword
+# Define the splat for Connect-GraphWithCert
+$graphParams = @{
+    tenantId       = $tenantId
+    clientId       = $clientId
+    certPath       = $certPath
+    certPassword   = $certPassword
+    ConnectToIntune = $true
+    ConnectToTeams = $false
+}
+
+# Connect to Microsoft Graph, Intune, and Teams
+$accessToken = Connect-GraphWithCert @graphParams
 
 Log-Params -Params @{accessToken = $accessToken }
 
@@ -337,10 +348,10 @@ function Process-Folder {
 
     if (Test-Path -Path $printerConfigPath) {
         Process-PrinterInstallation -PrinterConfigPath $printerConfigPath
-        Write-EnhancedLog -Message "Processed printer installation for folder: $($Folder.Name)" -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
+        Write-EnhancedLog -Message "Processed printer installation for folder: $($Folder.Name)" -Level "INFO"
     }
     else {
-        Write-EnhancedLog -Message "printer.json not found in folder: $($Folder.Name)" -Level "WARNING" -ForegroundColor ([ConsoleColor]::Yellow)
+        Write-EnhancedLog -Message "printer.json not found in folder: $($Folder.Name)" -Level "WARNING"
     }
 
     Process-Win32App -Folder $Folder
@@ -372,9 +383,9 @@ function Process-Win32App {
         Description = $Folder.Name
     }
 
-    Write-EnhancedLog -Message "Program ID: $($Prg.id)" -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
-    Write-EnhancedLog -Message "Program Name: $($Prg.name)" -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
-    Write-EnhancedLog -Message "Description: $($Prg.Description)" -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
+    Write-EnhancedLog -Message "Program ID: $($Prg.id)" -Level "INFO"
+    Write-EnhancedLog -Message "Program Name: $($Prg.name)" -Level "INFO"
+    Write-EnhancedLog -Message "Description: $($Prg.Description)" -Level "INFO"
 
     if ($Prg.id -ne $Prg.name) {
         throw "Error: Program ID ('$($Prg.id)') does not match Program Name ('$($Prg.name)')."
@@ -401,7 +412,7 @@ function Define-SourcePath {
     )
 
     $global:Prg_Path = Join-Path -Path $Repo_winget -ChildPath $Prg.id
-    Write-EnhancedLog -Message "Source path defined: $global:Prg_Path" -Level "INFO" -ForegroundColor ([ConsoleColor]::Green)
+    Write-EnhancedLog -Message "Source path defined: $global:Prg_Path" -Level "INFO"
 }
 
 function Check-ApplicationImage {
