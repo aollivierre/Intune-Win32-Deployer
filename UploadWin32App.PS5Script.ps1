@@ -164,147 +164,22 @@ try {
     #################################################################################################
 
 
-    #region LOADING SECRETS FOR GRAPH
-    #################################################################################################
-    #                                                                                               #
-    #                                 LOADING SECRETS FOR GRAPH                                     #
-    #                                                                                               #
-    #################################################################################################
-
-
-    #First, load secrets and create a credential object:
-    # Assuming secrets.json is in the same directory as your script
-    $secretsPath = Join-Path -Path $PSScriptRoot -ChildPath "secrets.json"
-
-    # Load the secrets from the JSON file
-    $secrets = Get-Content -Path $secretsPath -Raw | ConvertFrom-Json
-
-    # Read configuration from the JSON file
-    # Assign values from JSON to variables
-
-    # Read configuration from the JSON file
-    $configPath = Join-Path -Path $PSScriptRoot -ChildPath "config.json"
-    $env:MYMODULE_CONFIG_PATH = $configPath
-
-    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-
-    #  Variables from JSON file
-    $tenantId = $secrets.TenantId
-    $clientId = $secrets.ClientId
-
-    # Find any PFX file in the root directory of the script
-    $pfxFiles = Get-ChildItem -Path $PSScriptRoot -Filter *.pfx
-
-    if ($pfxFiles.Count -eq 0) {
-        Write-Error "No PFX file found in the root directory."
-        throw "No PFX file found"
-    }
-    elseif ($pfxFiles.Count -gt 1) {
-        Write-Error "Multiple PFX files found in the root directory. Please ensure there is only one PFX file."
-        throw "Multiple PFX files found"
-    }
-
-    # Use the first (and presumably only) PFX file found
-    $certPath = $pfxFiles[0].FullName
-
-    Write-EnhancedLog -Message "PFX file found: $certPath" -Level 'INFO'
-
-    $CertPassword = $secrets.CertPassword
-
-    #endregion LOADING SECRETS FOR GRAPH
-
-    # Call the function to initialize the environment
-    $envInitialization = Initialize-Win32Environment -scriptpath $PSScriptRoot
-
-
-    # # Run Initialize-Win32Environment and store the returned object
-    # $envInitialization = Initialize-Win32Environment -scriptpath "C:\path\to\your\script.ps1"
-
-    # # Access the properties of the EnvDetails object
-    $AOscriptDirectory = $envInitialization.EnvDetails.AOscriptDirectory
-    $directoryPath     = $envInitialization.EnvDetails.directoryPath
-    $Repo_Path         = $envInitialization.EnvDetails.Repo_Path
-    $Repo_winget       = $envInitialization.EnvDetails.Repo_winget
-
-    # Output the extracted values
-    Write-EnhancedLog -Message "AO Script Directory: $AOscriptDirectory"
-    Write-EnhancedLog -Message "Directory Path: $directoryPath"
-    Write-EnhancedLog -Message "Repository Path: $Repo_Path"
-    Write-EnhancedLog -Message "Winget Path: $Repo_winget"
+    # $UploadWin32AppParams = @{
+    #     Prg               = $Prg
+    #     Prg_Path          = $global:Prg_Path
+    #     Prg_img           = $global:Prg_img
+    #     Win32AppsRootPath = $PSScriptRoot
+    #     config            = $config
+    # }
+    # Upload-Win32App @UploadWin32AppParams
 
 
 
-    # Example usage of global variables outside the function
-    Write-EnhancedLog -Message "Global variables set by Initialize-Win32Environment" -Level 'INFO'
-    Write-EnhancedLog -Message "scriptBasePath: $scriptBasePath" -Level 'INFO'
-    Write-EnhancedLog -Message "modulesBasePath: $modulesBasePath" -Level 'INFO'
-    Write-EnhancedLog -Message "modulePath: $modulePath" -Level 'INFO'
-
-    # Write-EnhancedLog -Message "AOscriptDirectory: $AOscriptDirectory" -Level 'INFO'
-    # Write-EnhancedLog -Message "directoryPath: "$envInitialization.EnvDetails.directoryPath"" -Level 'INFO'
-    # Write-EnhancedLog -Message "Repo_Path: $Repo_Path" -Level 'INFO'
-    # Write-EnhancedLog -Message "Repo_winget: $Repo_winget" -Level 'INFO'
-
-
-    # Wait-Debugger
-
-
-    Remove-IntuneWinFiles -DirectoryPath $directoryPath
-
-
-    # Wait-Debugger
-
-
-
-    #to address this bug in https://github.com/MSEndpointMgr/IntuneWin32App/issues/155 use the following function to update the Invoke-AzureStorageBlobUploadFinalize.ps1
-
-    Copy-InvokeAzureStorageBlobUploadFinalize
-
-    ##########################################################################################################################
-    ############################################STARTING THE MAIN FUNCTION LOGIC HERE#########################################
-    ##########################################################################################################################
-
-    ################################################################################################################################
-    ################################################ START Ensure-ScriptPathsExist #################################################
-    ################################################################################################################################
-
-    ################################################################################################################################
-    ################################################ START GRAPH CONNECTING ########################################################
-    ################################################################################################################################
-    # Define the splat for Connect-GraphWithCert
-    $graphParams = @{
-        tenantId        = $tenantId
-        clientId        = $clientId
-        certPath        = $certPath
-        certPassword    = $certPassword
-        ConnectToIntune = $true
-        ConnectToTeams  = $false
-    }
-
-    # Connect to Microsoft Graph, Intune, and Teams
-    $accessToken = Connect-GraphWithCert @graphParams
-
-    Log-Params -Params @{accessToken = $accessToken }
-
-    Get-TenantDetails
-    #################################################################################################################################
-    ################################################# END Connecting to Graph #######################################################
-    #################################################################################################################################
- 
-    ####################################################################################
-    #   GO!
-    ####################################################################################
-
-    # Wait-Debugger
-
-    # Invoke-ScriptInPS5 -ScriptPath "C:\Code\Intune-Win32-Deployer\UploadWin32App.PS5Script.ps1"
-
-
-    # Retrieve all folder names in the specified directory
+       # Retrieve all folder names in the specified directory
     $folders = Get-ChildItem -Path $directoryPath -Directory
 
     foreach ($folder in $folders) {
-        $folderDetails = Process-Folder -Folder $folder -config $config -Repo_winget $Repo_winget
+        Process-Folder -Folder $folder
     }
 
  
