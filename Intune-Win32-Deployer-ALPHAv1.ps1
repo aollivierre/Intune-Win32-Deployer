@@ -20,6 +20,51 @@
 
 #>
 
+
+#region RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION
+#################################################################################################
+#                                                                                               #
+#                           RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION                           #
+#                                                                                               #
+#################################################################################################
+
+function Relaunch-InPowerShell5 {
+    # Check the current version of PowerShell
+    if ($PSVersionTable.PSVersion.Major -ge 7) {
+        Write-Host "Hello from PowerShell 7"
+
+        # Get the script path (works inside a function as well)
+        $scriptPath = $PSCommandPath
+
+        # $scriptPath = $MyInvocation.MyCommand.Definition
+        $ps5Path = "$($env:SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe"
+
+        # Build the argument to relaunch this script in PowerShell 5 with -NoExit
+        $ps5Args = "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+
+        Write-Host "Relaunching in PowerShell 5..."
+        Start-Process -FilePath $ps5Path -ArgumentList $ps5Args
+
+        # Exit the current PowerShell 7 session to allow PowerShell 5 to take over
+        exit
+    }
+
+    # If relaunching in PowerShell 5
+    Write-Host "Hello from PowerShell 5"
+}
+
+Relaunch-InPowerShell5
+
+#endregion RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION
+#################################################################################################
+#                                                                                               #
+#                           END OF RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION                    #
+#                                                                                               #
+#################################################################################################
+
+
+
+
 # Set environment variable globally for all users
 [System.Environment]::SetEnvironmentVariable('EnvironmentMode', 'dev', 'Machine')
 
@@ -222,11 +267,12 @@ try {
 
     # # Access the properties of the EnvDetails object
     $AOscriptDirectory = $envInitialization.EnvDetails.AOscriptDirectory
-    $directoryPath     = $envInitialization.EnvDetails.directoryPath
-    $Repo_Path         = $envInitialization.EnvDetails.Repo_Path
-    $Repo_winget       = $envInitialization.EnvDetails.Repo_winget
+    $directoryPath = $envInitialization.EnvDetails.directoryPath
+    $Repo_Path = $envInitialization.EnvDetails.Repo_Path
+    $Repo_winget = $envInitialization.EnvDetails.Repo_winget
 
     # Output the extracted values
+    Write-EnhancedLog -Message "Global variables set by Initialize-Win32Environment" -Level 'INFO'
     Write-EnhancedLog -Message "AO Script Directory: $AOscriptDirectory"
     Write-EnhancedLog -Message "Directory Path: $directoryPath"
     Write-EnhancedLog -Message "Repository Path: $Repo_Path"
@@ -235,7 +281,6 @@ try {
 
 
     # Example usage of global variables outside the function
-    Write-EnhancedLog -Message "Global variables set by Initialize-Win32Environment" -Level 'INFO'
     Write-EnhancedLog -Message "scriptBasePath: $scriptBasePath" -Level 'INFO'
     Write-EnhancedLog -Message "modulesBasePath: $modulesBasePath" -Level 'INFO'
     Write-EnhancedLog -Message "modulePath: $modulePath" -Level 'INFO'
@@ -304,7 +349,16 @@ try {
     $folders = Get-ChildItem -Path $directoryPath -Directory
 
     foreach ($folder in $folders) {
-        $folderDetails = Process-Folder -Folder $folder -config $config -Repo_winget $Repo_winget
+
+        $ProcessFolderParams = @{
+            Folder      = $folder
+            config      = $config
+            Repo_winget = $Repo_winget
+            scriptpath  = $PSScriptRoot
+        }
+        
+        $folderDetails = Process-Folder @ProcessFolderParams
+        
     }
 
  
