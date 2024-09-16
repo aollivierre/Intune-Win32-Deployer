@@ -1,107 +1,3 @@
-param (
-    [Switch]$SimulatingIntune = $false
-)
-
-$currentExecutionPolicy = Get-ExecutionPolicy
-
-# If it's not already set to Bypass, change it
-if ($currentExecutionPolicy -ne 'Bypass') {
-    Write-Host "Setting Execution Policy to Bypass..."
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-}
-else {
-    Write-Host "Execution Policy is already set to Bypass."
-}
-
-# ################################################################################################################################
-# ################################################ END Setting Execution Policy ##################################################
-# ################################################################################################################################
-
-# Create a time-stamped folder in the temp directory
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$tempFolder = [System.IO.Path]::Combine($env:TEMP, "Ensure-RunningAsSystem_$timestamp")
-
-# Ensure the temp folder exists
-if (-not (Test-Path -Path $tempFolder)) {
-    New-Item -Path $tempFolder -ItemType Directory | Out-Null
-}
-
-# Use the time-stamped temp folder for your paths
-$privateFolderPath = Join-Path -Path $tempFolder -ChildPath "private"
-$PsExec64Path = Join-Path -Path $privateFolderPath -ChildPath "PsExec64.exe"
-
-# Check if running as a web script (no $MyInvocation.MyCommand.Path)
-if (-not $MyInvocation.MyCommand.Path) {
-    Write-Host "Running as web script, downloading and executing locally..."
-
-    # Ensure TLS 1.2 is used for the download
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    # Create a time-stamped folder in the temp directory
-    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $downloadFolder = Join-Path -Path $env:TEMP -ChildPath "TriggerWindowsUpdates_$timestamp"
-
-    # Ensure the folder exists
-    if (-not (Test-Path -Path $downloadFolder)) {
-        New-Item -Path $downloadFolder -ItemType Directory | Out-Null
-    }
-
-    # Download the script to the time-stamped folder
-    $localScriptPath = Join-Path -Path $downloadFolder -ChildPath "install.ps1"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/aollivierre/WinUpdates/main/PR4B_TriggerWindowsUpdates-v4/install.ps1" -OutFile $localScriptPath
-
-    Write-Host "Downloading config.psd1 file..."
-
-    # Download the config.psd1 file to the time-stamped folder
-    $configFilePath = Join-Path -Path $downloadFolder -ChildPath "config.psd1"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/aollivierre/WinUpdates/main/PR4B_TriggerWindowsUpdates-v4/config.psd1" -OutFile $configFilePath
-
-    # Execute the script locally
-    & $localScriptPath
-
-    Exit # Exit after running the script locally
-}
-
-else {
-    # If running in a regular context, use the actual path of the script
-    $ScriptToRunAsSystem = $MyInvocation.MyCommand.Path
-}
-
-# Ensure the private folder exists before continuing
-if (-not (Test-Path -Path $privateFolderPath)) {
-    New-Item -Path $privateFolderPath -ItemType Directory | Out-Null
-}
-
-
-
-# Conditional check for SimulatingIntune switch
-if ($SimulatingIntune) {
-    # If not running as a web script, run as SYSTEM using PsExec
-    Write-Host "Simulating Intune environment. Running script as SYSTEM..."
-
-    Write-Host "Running as SYSTEM..."
-
-
-    # Call the function to run as SYSTEM
-    $EnsureRunningAsSystemParams = @{
-        PsExec64Path = $PsExec64Path
-        ScriptPath   = $ScriptToRunAsSystem
-        TargetFolder = $privateFolderPath
-    }
-
-    # Run Ensure-RunningAsSystem only if SimulatingIntune is set
-    Ensure-RunningAsSystem @EnsureRunningAsSystemParams
-}
-else {
-    Write-Host "Not simulating Intune. Skipping SYSTEM execution."
-}
-
-
-# ################################################################################################################################
-# ################################################ END CALLING AS SYSTEM (Uncomment for debugging) ###############################
-# ################################################################################################################################
-
-
 # Set environment variable globally for all users
 [System.Environment]::SetEnvironmentVariable('EnvironmentMode', 'prod', 'Machine')
 
@@ -117,6 +13,8 @@ $mode = $env:EnvironmentMode
 
 Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/aollivierre/module-starter/main/Install-EnhancedModuleStarterAO.ps1")
 
+# Wait-Debugger
+
 # Define a hashtable for splatting
 $moduleStarterParams = @{
     Mode                   = 'prod'
@@ -129,6 +27,9 @@ $moduleStarterParams = @{
 
 # Call the function using the splat
 Invoke-ModuleStarter @moduleStarterParams
+
+
+# Wait-Debugger
 
 #endregion FIRING UP MODULE STARTER
 
@@ -240,21 +141,171 @@ try {
     #                                                                                               #
     #################################################################################################
 
-    ###########################################################################################################################
-    #############################################STARTING THE MAIN SCHEDULED TASK LOGIC HERE###################################
-    ###########################################################################################################################
 
-    # Define the parameters using a hashtable
-    $taskParams = @{
-        ConfigPath = "$PSScriptRoot\config.psd1"
-        FileName   = "HiddenScript.vbs"
-        Scriptroot = "$PSScriptRoot"
+    Import-Module PSWindowsUpdate
+    # Get-WUList
+    # Wait-Debugger
+
+    function Check-WindowsUpdates {
+        <#
+        .SYNOPSIS
+        Checks for installed and pending Windows Updates and logs the results.
+    
+        .DESCRIPTION
+        The Check-WindowsUpdates function checks for installed and pending Windows Updates based on either specific KB articles or all updates. It logs the results, checks if a reboot is required, and handles errors gracefully.
+    
+        .PARAMETER KBArticles
+        A list of specific KB articles to check for installation status.
+    
+        .PARAMETER CheckAllUpdates
+        A switch to check all installed and pending updates.
+    
+        .EXAMPLE
+        $params = @{
+            KBArticles     = @('KB1234567', 'KB2345678')
+        }
+        Check-WindowsUpdates @params
+        Checks if the specified KB articles are installed and logs the results.
+        #>
+    
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $false, HelpMessage = "Provide a list of KB articles to check.")]
+            [string[]]$KBArticles,
+    
+            [Parameter(Mandatory = $false, HelpMessage = "Switch to check all installed and pending updates.")]
+            [switch]$CheckAllUpdates
+        )
+    
+        Begin {
+            Write-EnhancedLog -Message "Starting Check-WindowsUpdates function" -Level "Notice"
+            Log-Params -Params $PSCmdlet.MyInvocation.BoundParameters
+    
+            # Validate parameters
+            if (-not $KBArticles -and -not $CheckAllUpdates) {
+                throw "Either KBArticles or CheckAllUpdates switch must be provided."
+            }
+        }
+    
+        Process {
+            try {
+                # Retrieve installed updates
+                Write-EnhancedLog -Message "Retrieving installed updates." -Level "INFO"
+                $InstalledUpdates = Get-WUList -IsInstalled
+    
+                # Retrieve all updates and filter pending ones
+                Write-EnhancedLog -Message "Retrieving all updates (to check for pending)." -Level "INFO"
+                $AllUpdates = Get-WUList
+                $PendingUpdates = $AllUpdates | Where-Object { $_.IsInstalled -eq $false }
+
+                # Wait-Debugger
+    
+                # Create efficient list for results
+                $Results = [System.Collections.Generic.List[PSCustomObject]]::new()
+    
+                if ($KBArticles) {
+                    # Check specific KB articles in both installed and pending updates
+                    foreach ($KB in $KBArticles) {
+                        $IsInstalled = $InstalledUpdates | Where-Object { $_.KB -eq $KB }
+                        $IsPending = $PendingUpdates | Where-Object { $_.KB -eq $KB }
+    
+                        $Result = [PSCustomObject]@{
+                            KB        = $KB
+                            Installed = if ($IsInstalled) { $true } else { $false }
+                            Pending   = if ($IsPending) { $true } else { $false }
+                        }
+                        $Results.Add($Result)
+    
+                        # Log the result
+                        if ($IsInstalled) {
+                            Write-EnhancedLog -Message "[Installed] KB: $($Result.KB)" -Level "INFO"
+                        }
+                        elseif ($IsPending) {
+                            Write-EnhancedLog -Message "[Pending] KB: $($Result.KB)" -Level "WARNING"
+                        }
+                        else {
+                            Write-EnhancedLog -Message "[Not Installed or Pending] KB: $($Result.KB)" -Level "ERROR"
+                        }
+                    }
+                }
+                elseif ($CheckAllUpdates.IsPresent) {
+                    # Log all installed and pending updates
+                    foreach ($Update in $InstalledUpdates) {
+                        $Result = [PSCustomObject]@{
+                            KB        = $Update.KB
+                            Installed = $true
+                            Pending   = $false
+                        }
+                        $Results.Add($Result)
+    
+                        Write-EnhancedLog -Message "[Installed] KB: $($Update.KB), Title: $($Update.Title)" -Level "INFO"
+                    }
+    
+                    foreach ($Update in $PendingUpdates) {
+                        $Result = [PSCustomObject]@{
+                            KB        = $Update.KB
+                            Installed = $false
+                            Pending   = $true
+                        }
+                        $Results.Add($Result)
+    
+                        Write-EnhancedLog -Message "[Pending] KB: $($Update.KB), Title: $($Update.Title)" -Level "WARNING"
+                    }
+                }
+            }
+            catch {
+                Write-EnhancedLog -Message "Error checking for updates: $($_.Exception.Message)" -Level "ERROR"
+                Handle-Error -ErrorRecord $_
+                throw
+            }
+            finally {
+                Write-EnhancedLog -Message "Exiting Check-WindowsUpdates function" -Level "Notice"
+            }
+        }
+    
+        End {
+            try {
+                Write-EnhancedLog -Message "Checking for reboot requirements." -Level "INFO"
+                $RebootStatus = Get-WURebootStatus
+                $RebootRequired = $RebootStatus.RebootRequired
+    
+                # Log reboot status
+                if ($RebootRequired -eq $true) {
+                    Write-EnhancedLog -Message "A reboot is required." -Level "CRITICAL"
+                }
+                else {
+                    Write-EnhancedLog -Message "No reboot required." -Level "INFO"
+                }
+            }
+            catch {
+                Write-EnhancedLog -Message "Error checking reboot status: $($_.Exception.Message)" -Level "ERROR"
+                Handle-Error -ErrorRecord $_
+                throw
+            }
+            finally {
+                Write-EnhancedLog -Message "Windows Update check completed." -Level "Notice"
+            }
+        }
     }
+    
+    # Example usage
+    # $params = @{
+    #     KBArticles     = @('KB1234567', 'KB2345678')
+    # }
+    # Check-WindowsUpdates @params
+    
+    # To check all installed and pending updates:
+    Check-WindowsUpdates -CheckAllUpdates
+    
+    
+    
+    
 
-    # Call the function with the splatted parameters
-    CreateAndRegisterScheduledTask @taskParams
+    Wait-Debugger
+    
+
  
-    #endregion Script Logic
+    #endregion
 }
 catch {
     Write-EnhancedLog -Message "An error occurred during script execution: $_" -Level 'ERROR'

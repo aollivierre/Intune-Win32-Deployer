@@ -1,107 +1,3 @@
-param (
-    [Switch]$SimulatingIntune = $false
-)
-
-$currentExecutionPolicy = Get-ExecutionPolicy
-
-# If it's not already set to Bypass, change it
-if ($currentExecutionPolicy -ne 'Bypass') {
-    Write-Host "Setting Execution Policy to Bypass..."
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-}
-else {
-    Write-Host "Execution Policy is already set to Bypass."
-}
-
-# ################################################################################################################################
-# ################################################ END Setting Execution Policy ##################################################
-# ################################################################################################################################
-
-# Create a time-stamped folder in the temp directory
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$tempFolder = [System.IO.Path]::Combine($env:TEMP, "Ensure-RunningAsSystem_$timestamp")
-
-# Ensure the temp folder exists
-if (-not (Test-Path -Path $tempFolder)) {
-    New-Item -Path $tempFolder -ItemType Directory | Out-Null
-}
-
-# Use the time-stamped temp folder for your paths
-$privateFolderPath = Join-Path -Path $tempFolder -ChildPath "private"
-$PsExec64Path = Join-Path -Path $privateFolderPath -ChildPath "PsExec64.exe"
-
-# Check if running as a web script (no $MyInvocation.MyCommand.Path)
-if (-not $MyInvocation.MyCommand.Path) {
-    Write-Host "Running as web script, downloading and executing locally..."
-
-    # Ensure TLS 1.2 is used for the download
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    # Create a time-stamped folder in the temp directory
-    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    $downloadFolder = Join-Path -Path $env:TEMP -ChildPath "TriggerWindowsUpdates_$timestamp"
-
-    # Ensure the folder exists
-    if (-not (Test-Path -Path $downloadFolder)) {
-        New-Item -Path $downloadFolder -ItemType Directory | Out-Null
-    }
-
-    # Download the script to the time-stamped folder
-    $localScriptPath = Join-Path -Path $downloadFolder -ChildPath "install.ps1"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/aollivierre/WinUpdates/main/PR4B_TriggerWindowsUpdates-v4/install.ps1" -OutFile $localScriptPath
-
-    Write-Host "Downloading config.psd1 file..."
-
-    # Download the config.psd1 file to the time-stamped folder
-    $configFilePath = Join-Path -Path $downloadFolder -ChildPath "config.psd1"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/aollivierre/WinUpdates/main/PR4B_TriggerWindowsUpdates-v4/config.psd1" -OutFile $configFilePath
-
-    # Execute the script locally
-    & $localScriptPath
-
-    Exit # Exit after running the script locally
-}
-
-else {
-    # If running in a regular context, use the actual path of the script
-    $ScriptToRunAsSystem = $MyInvocation.MyCommand.Path
-}
-
-# Ensure the private folder exists before continuing
-if (-not (Test-Path -Path $privateFolderPath)) {
-    New-Item -Path $privateFolderPath -ItemType Directory | Out-Null
-}
-
-
-
-# Conditional check for SimulatingIntune switch
-if ($SimulatingIntune) {
-    # If not running as a web script, run as SYSTEM using PsExec
-    Write-Host "Simulating Intune environment. Running script as SYSTEM..."
-
-    Write-Host "Running as SYSTEM..."
-
-
-    # Call the function to run as SYSTEM
-    $EnsureRunningAsSystemParams = @{
-        PsExec64Path = $PsExec64Path
-        ScriptPath   = $ScriptToRunAsSystem
-        TargetFolder = $privateFolderPath
-    }
-
-    # Run Ensure-RunningAsSystem only if SimulatingIntune is set
-    Ensure-RunningAsSystem @EnsureRunningAsSystemParams
-}
-else {
-    Write-Host "Not simulating Intune. Skipping SYSTEM execution."
-}
-
-
-# ################################################################################################################################
-# ################################################ END CALLING AS SYSTEM (Uncomment for debugging) ###############################
-# ################################################################################################################################
-
-
 # Set environment variable globally for all users
 [System.Environment]::SetEnvironmentVariable('EnvironmentMode', 'prod', 'Machine')
 
@@ -117,6 +13,8 @@ $mode = $env:EnvironmentMode
 
 Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/aollivierre/module-starter/main/Install-EnhancedModuleStarterAO.ps1")
 
+# Wait-Debugger
+
 # Define a hashtable for splatting
 $moduleStarterParams = @{
     Mode                   = 'prod'
@@ -129,6 +27,9 @@ $moduleStarterParams = @{
 
 # Call the function using the splat
 Invoke-ModuleStarter @moduleStarterParams
+
+
+# Wait-Debugger
 
 #endregion FIRING UP MODULE STARTER
 
@@ -240,19 +141,116 @@ try {
     #                                                                                               #
     #################################################################################################
 
-    ###########################################################################################################################
-    #############################################STARTING THE MAIN SCHEDULED TASK LOGIC HERE###################################
-    ###########################################################################################################################
+    # ################################################################################################################################
+    # ############### CALLING AS SYSTEM to simulate Intune deployment as SYSTEM (Uncomment for debugging) ############################
+    # ################################################################################################################################
 
-    # Define the parameters using a hashtable
-    $taskParams = @{
-        ConfigPath = "$PSScriptRoot\config.psd1"
-        FileName   = "HiddenScript.vbs"
-        Scriptroot = "$PSScriptRoot"
+    # Example usage
+    $privateFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "private"
+    $PsExec64Path = Join-Path -Path $privateFolderPath -ChildPath "PsExec64.exe"
+    $ScriptToRunAsSystem = $MyInvocation.MyCommand.Path
+
+    Ensure-RunningAsSystem -PsExec64Path $PsExec64Path -ScriptPath $ScriptToRunAsSystem -TargetFolder $privateFolderPath
+
+
+    # ################################################################################################################################
+    # ################################################ END CALLING AS SYSTEM (Uncomment for debugging) ###############################
+    # ################################################################################################################################
+
+
+    Import-Module PSWindowsUpdate
+
+
+    function Install-PendingUpdates {
+        <#
+        .SYNOPSIS
+        Installs all pending Windows Updates and logs the results.
+    
+        .DESCRIPTION
+        The Install-PendingUpdates function retrieves all pending Windows Updates and installs them. It logs the installation process and handles errors gracefully.
+    
+        .EXAMPLE
+        Install-PendingUpdates
+        Installs all pending updates and logs the results.
+        #>
+    
+        [CmdletBinding()]
+        param ()
+    
+        Begin {
+            Write-EnhancedLog -Message "Starting Install-PendingUpdates function" -Level "Notice"
+    
+            # Retrieve pending updates
+            try {
+                Write-EnhancedLog -Message "Retrieving all updates to check for pending updates." -Level "INFO"
+                $AllUpdates = Get-WUList
+                $PendingUpdates = $AllUpdates | Where-Object { $_.IsInstalled -eq $false }
+    
+                if (-not $PendingUpdates) {
+                    Write-EnhancedLog -Message "No pending updates found." -Level "INFO"
+                    return
+                }
+    
+                Write-EnhancedLog -Message "Found $($PendingUpdates.Count) pending updates." -Level "INFO"
+            }
+            catch {
+                Write-EnhancedLog -Message "Error retrieving updates: $($_.Exception.Message)" -Level "ERROR"
+                Handle-Error -ErrorRecord $_
+                throw
+            }
+        }
+    
+        Process {
+            # Install each pending update
+            foreach ($Update in $PendingUpdates) {
+                try {
+                    Write-EnhancedLog -Message "Installing update: $($Update.KB) - $($Update.Title)" -Level "INFO"
+                    
+                    # Install the pending update
+                    Install-WindowsUpdate -KBArticleID $Update.KB -AcceptAll -IgnoreReboot -Install -Verbose
+    
+                    Write-EnhancedLog -Message "Successfully installed: $($Update.KB)" -Level "INFO"
+                }
+                catch {
+                    Write-EnhancedLog -Message "Error installing update $($Update.KB): $($_.Exception.Message)" -Level "ERROR"
+                    Handle-Error -ErrorRecord $_
+                    throw
+                }
+            }
+        }
+    
+        End {
+            Write-EnhancedLog -Message "Exiting Install-PendingUpdates function" -Level "Notice"
+    
+            # Check if a reboot is required after installing updates
+            try {
+                Write-EnhancedLog -Message "Checking for reboot requirements." -Level "INFO"
+                $RebootStatus = Get-WURebootStatus
+                $RebootRequired = $RebootStatus.RebootRequired
+    
+                if ($RebootRequired -eq $true) {
+                    Write-EnhancedLog -Message "A reboot is required after installing updates." -Level "CRITICAL"
+                }
+                else {
+                    Write-EnhancedLog -Message "No reboot required after installing updates." -Level "INFO"
+                }
+            }
+            catch {
+                Write-EnhancedLog -Message "Error checking reboot status: $($_.Exception.Message)" -Level "ERROR"
+                Handle-Error -ErrorRecord $_
+                throw
+            }
+        }
     }
+    
+    # Example usage
+    Install-PendingUpdates
+    
 
-    # Call the function with the splatted parameters
-    CreateAndRegisterScheduledTask @taskParams
+
+    # Wait-Debugger
+    
+
  
     #endregion Script Logic
 }
