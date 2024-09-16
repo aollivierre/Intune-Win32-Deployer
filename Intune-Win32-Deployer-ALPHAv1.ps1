@@ -55,14 +55,13 @@ function Relaunch-InPowerShell5 {
 
 Relaunch-InPowerShell5
 
+
 #endregion RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION
 #################################################################################################
 #                                                                                               #
 #                           END OF RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION                    #
 #                                                                                               #
 #################################################################################################
-
-
 
 
 # Set environment variable globally for all users
