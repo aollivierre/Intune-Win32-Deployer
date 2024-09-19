@@ -216,35 +216,99 @@ try {
     #################################################################################################
 
 
-    #First, load secrets and create a credential object:
-    # Assuming secrets.json is in the same directory as your script
-    $secretsPath = Join-Path -Path $PSScriptRoot -ChildPath "secrets.json"
+#     Start
+#   |
+#   v
+# Check if secrets directory exists
+#   |
+#   +-- [Yes] --> Check if tenant folders exist
+#   |                |
+#   |                +-- [Yes] --> List tenant folders
+#   |                |                |
+#   |                |                v
+#   |                |       Display list and prompt user for tenant selection
+#   |                |                |
+#   |                |                v
+#   |                |       Validate user's selected tenant folder
+#   |                |                |
+#   |                |                +-- [Valid] --> Check if secrets.json exists
+#   |                |                |                 |
+#   |                |                |                 +-- [Yes] --> Load secrets from JSON file
+#   |                |                |                 |                |
+#   |                |                |                 |                v
+#   |                |                |                 |        Check for PFX file
+#   |                |                |                 |                |
+#   |                |                |                 |                +-- [Yes] --> Validate single PFX file
+#   |                |                |                 |                |                 |
+#   |                |                |                 |                |                 v
+#   |                |                |                 |                |        Assign values from secrets to variables
+#   |                |                |                 |                |                 |
+#   |                |                |                 |                |                 v
+#   |                |                |                 |                +--> Write log "PFX file found"
+#   |                |                |                 |
+#   |                |                |                 +-- [No] --> Error: secrets.json not found
+#   |                |                |                
+#   |                |                +-- [Invalid] --> Error: Invalid tenant folder
+#   |                |                
+#   |                +-- [No] --> Error: No tenant folders found
+#   |
+#   +-- [No] --> Error: Secrets directory not found
+#   |
+#   v
+# End
+
+
+    # Define the path to the secrets directory
+    $secretsDirPath = Join-Path -Path $PSScriptRoot -ChildPath "secrets"
+
+    # Check if the secrets directory exists
+    if (-Not (Test-Path -Path $secretsDirPath)) {
+        Write-Error "Secrets directory not found at '$secretsDirPath'."
+        throw "Secrets directory not found"
+    }
+
+    # List all folders (tenants) in the secrets directory
+    $tenantFolders = Get-ChildItem -Path $secretsDirPath -Directory
+
+    if ($tenantFolders.Count -eq 0) {
+        Write-Error "No tenant folders found in the secrets directory."
+        throw "No tenant folders found"
+    }
+
+    # Display the list of tenant folders and ask the user to confirm
+    Write-Host "Available tenant folders:"
+    $tenantFolders | ForEach-Object { Write-Host "- $($_.Name)" }
+
+    $selectedTenant = Read-Host "Enter the name of the tenant folder you want to use"
+
+    # Validate the user's selection
+    $selectedTenantPath = Join-Path -Path $secretsDirPath -ChildPath $selectedTenant
+
+    if (-Not (Test-Path -Path $selectedTenantPath)) {
+        Write-Error "The specified tenant folder '$selectedTenant' does not exist."
+        throw "Invalid tenant folder"
+    }
+
+    # Define paths for the secrets.json and PFX files
+    $secretsJsonPath = Join-Path -Path $selectedTenantPath -ChildPath "secrets.json"
+    $pfxFiles = Get-ChildItem -Path $selectedTenantPath -Filter *.pfx
+
+    # Check if secrets.json exists
+    if (-Not (Test-Path -Path $secretsJsonPath)) {
+        Write-Error "secrets.json file not found in '$selectedTenantPath'."
+        throw "secrets.json file not found"
+    }
 
     # Load the secrets from the JSON file
-    $secrets = Get-Content -Path $secretsPath -Raw | ConvertFrom-Json
+    $secrets = Get-Content -Path $secretsJsonPath -Raw | ConvertFrom-Json
 
-    # Read configuration from the JSON file
-    # Assign values from JSON to variables
-
-    # Read configuration from the JSON file
-    $configPath = Join-Path -Path $PSScriptRoot -ChildPath "config.json"
-    $env:MYMODULE_CONFIG_PATH = $configPath
-
-    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
-
-    #  Variables from JSON file
-    $tenantId = $secrets.TenantId
-    $clientId = $secrets.ClientId
-
-    # Find any PFX file in the root directory of the script
-    $pfxFiles = Get-ChildItem -Path $PSScriptRoot -Filter *.pfx
-
+    # Check if a PFX file exists
     if ($pfxFiles.Count -eq 0) {
-        Write-Error "No PFX file found in the root directory."
+        Write-Error "No PFX file found in the '$selectedTenantPath' directory."
         throw "No PFX file found"
     }
     elseif ($pfxFiles.Count -gt 1) {
-        Write-Error "Multiple PFX files found in the root directory. Please ensure there is only one PFX file."
+        Write-Error "Multiple PFX files found in the '$selectedTenantPath' directory. Please ensure there is only one PFX file."
         throw "Multiple PFX files found"
     }
 
@@ -253,9 +317,20 @@ try {
 
     Write-EnhancedLog -Message "PFX file found: $certPath" -Level 'INFO'
 
+    # Assign values from JSON to variables
+    $tenantId = $secrets.TenantId
+    $clientId = $secrets.ClientId
     $CertPassword = $secrets.CertPassword
 
+
     #endregion LOADING SECRETS FOR GRAPH
+
+
+    # Read configuration from the JSON file
+    $configPath = Join-Path -Path $PSScriptRoot -ChildPath "config.json"
+    # $env:MYMODULE_CONFIG_PATH = $configPath
+    
+    $config = Get-Content -Path $configPath -Raw | ConvertFrom-Json
 
     # Call the function to initialize the environment
     $envInitialization = Initialize-Win32Environment -scriptpath $PSScriptRoot
