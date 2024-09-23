@@ -77,7 +77,7 @@ $mode = $env:EnvironmentMode
 #                                                                                               #
 #################################################################################################
 
-Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/aollivierre/module-starter/main/Install-EnhancedModuleStarterAO.ps1")
+# Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/aollivierre/module-starter/main/Install-EnhancedModuleStarterAO.ps1")
 
 # Wait-Debugger
 
@@ -93,6 +93,23 @@ $moduleStarterParams = @{
 
 # Call the function using the splat
 Invoke-ModuleStarter @moduleStarterParams
+
+
+
+
+
+# Define a hashtable for splatting
+# $moduleStarterParams = @{
+#     Mode                   = 'PROD'
+#     SkipPSGalleryModules   = $FALSE
+#     SkipCheckandElevate    = $FALSE
+#     SkipPowerShell7Install = $FALSE
+#     SkipEnhancedModules    = $FALSE
+#     SkipGitRepos           = $true
+# }
+
+# # Call the function using the splat
+# Invoke-ModuleStarter @moduleStarterParams
 
 
 # Wait-Debugger
