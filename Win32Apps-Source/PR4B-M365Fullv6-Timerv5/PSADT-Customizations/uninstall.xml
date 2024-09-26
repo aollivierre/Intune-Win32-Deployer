@@ -1,0 +1,9 @@
+<Configuration>
+<Display Level="None" AcceptEULA="TRUE" />
+<Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+<Product ID="O365BusinessRetail">
+<Language ID="en-us" />
+</Product>
+  <Remove All="TRUE" />
+  <RemoveMSI />
+</Configuration>
