@@ -233,46 +233,46 @@ try {
     #################################################################################################
 
 
-#     Start
-#   |
-#   v
-# Check if secrets directory exists
-#   |
-#   +-- [Yes] --> Check if tenant folders exist
-#   |                |
-#   |                +-- [Yes] --> List tenant folders
-#   |                |                |
-#   |                |                v
-#   |                |       Display list and prompt user for tenant selection
-#   |                |                |
-#   |                |                v
-#   |                |       Validate user's selected tenant folder
-#   |                |                |
-#   |                |                +-- [Valid] --> Check if secrets.json exists
-#   |                |                |                 |
-#   |                |                |                 +-- [Yes] --> Load secrets from JSON file
-#   |                |                |                 |                |
-#   |                |                |                 |                v
-#   |                |                |                 |        Check for PFX file
-#   |                |                |                 |                |
-#   |                |                |                 |                +-- [Yes] --> Validate single PFX file
-#   |                |                |                 |                |                 |
-#   |                |                |                 |                |                 v
-#   |                |                |                 |                |        Assign values from secrets to variables
-#   |                |                |                 |                |                 |
-#   |                |                |                 |                |                 v
-#   |                |                |                 |                +--> Write log "PFX file found"
-#   |                |                |                 |
-#   |                |                |                 +-- [No] --> Error: secrets.json not found
-#   |                |                |                
-#   |                |                +-- [Invalid] --> Error: Invalid tenant folder
-#   |                |                
-#   |                +-- [No] --> Error: No tenant folders found
-#   |
-#   +-- [No] --> Error: Secrets directory not found
-#   |
-#   v
-# End
+    #     Start
+    #   |
+    #   v
+    # Check if secrets directory exists
+    #   |
+    #   +-- [Yes] --> Check if tenant folders exist
+    #   |                |
+    #   |                +-- [Yes] --> List tenant folders
+    #   |                |                |
+    #   |                |                v
+    #   |                |       Display list and prompt user for tenant selection
+    #   |                |                |
+    #   |                |                v
+    #   |                |       Validate user's selected tenant folder
+    #   |                |                |
+    #   |                |                +-- [Valid] --> Check if secrets.json exists
+    #   |                |                |                 |
+    #   |                |                |                 +-- [Yes] --> Load secrets from JSON file
+    #   |                |                |                 |                |
+    #   |                |                |                 |                v
+    #   |                |                |                 |        Check for PFX file
+    #   |                |                |                 |                |
+    #   |                |                |                 |                +-- [Yes] --> Validate single PFX file
+    #   |                |                |                 |                |                 |
+    #   |                |                |                 |                |                 v
+    #   |                |                |                 |                |        Assign values from secrets to variables
+    #   |                |                |                 |                |                 |
+    #   |                |                |                 |                |                 v
+    #   |                |                |                 |                +--> Write log "PFX file found"
+    #   |                |                |                 |
+    #   |                |                |                 +-- [No] --> Error: secrets.json not found
+    #   |                |                |                
+    #   |                |                +-- [Invalid] --> Error: Invalid tenant folder
+    #   |                |                
+    #   |                +-- [No] --> Error: No tenant folders found
+    #   |
+    #   +-- [No] --> Error: Secrets directory not found
+    #   |
+    #   v
+    # End
 
 
     # Define the path to the secrets directory
@@ -404,25 +404,205 @@ try {
     ################################################ START Ensure-ScriptPathsExist #################################################
     ################################################################################################################################
 
+    # ################################################################################################################################
+    # ################################################ START GRAPH CONNECTING ########################################################
+    # ################################################################################################################################
+    # # Define the splat for Connect-GraphWithCert
+    # $graphParams = @{
+    #     tenantId        = $tenantId
+    #     clientId        = $clientId
+    #     certPath        = $certPath
+    #     certPassword    = $certPassword
+    #     ConnectToIntune = $true
+    #     ConnectToTeams  = $false
+    # }
+
+    # # Connect to Microsoft Graph, Intune, and Teams
+    # $accessToken = Connect-GraphWithCert @graphParams
+
+
+
+
+    # # # Path to the scopes.json file
+    # # $jsonFilePath = "$PSscriptroot\scopes.json"
+
+    # # # Read the JSON file
+    # # $jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+
+    # # # Extract the scopes
+    # # $scopes = $jsonContent.Scopes -join " "
+
+    # # # Connect to Microsoft Graph with the specified scopes
+    # # # Connect to Graph interactively
+    # # disconnect-Graph
+    # # Disconnect-MgGraph -Verbose
+
+    # # # Call the function to connect to Microsoft Graph
+    # # Connect-ToMicrosoftGraphIfServerCore -Scopes $scopes
+
+
+
+    # Log-Params -Params @{accessToken = $accessToken }
+
+    # # Get-TenantDetails
+
+
+    # # Wait-Debugger
+
+
+    # # Get the tenant details
+    # $tenantDetails = $null
+    # $tenantDetails = Get-TenantDetails
+    # if ($null -eq $tenantDetails) {
+    #     Write-EnhancedLog -Message "Unable to proceed without tenant details" -Level "ERROR"
+    #     throw "Tenant Details name is empty. Cannot proceed without a valid tenant details"
+    #     exit
+    # }
+
+    # $tenantDetails
+
+
+
+
+
+
+
+
     ################################################################################################################################
     ################################################ START GRAPH CONNECTING ########################################################
     ################################################################################################################################
+
     # Define the splat for Connect-GraphWithCert
-    $graphParams = @{
-        tenantId        = $tenantId
-        clientId        = $clientId
-        certPath        = $certPath
-        certPassword    = $certPassword
-        ConnectToIntune = $true
-        ConnectToTeams  = $false
+    # $graphParams = @{
+    #     tenantId        = $tenantId
+    #     clientId        = $clientId
+    #     certPath        = $certPath
+    #     certPassword    = $certPassword
+    #     ConnectToIntune = $true
+    #     ConnectToTeams  = $false
+    # }
+
+    # $accessToken = $null
+    # $tenantDetails = $null
+
+
+
+    # $tenantId
+
+    # Connect interactively to Intune
+    # Connect-ToIntuneInteractive -tenantId $tenantId
+
+    # Connect interactively to Intune
+    # Connect-ToIntuneInteractive -tenantId $tenantId -clientId $clientId
+    # Connect-ToIntuneInteractive -tenantId $tenantId
+
+
+    # $accessToken = Connect-GraphWithCert @graphParams
+
+
+
+
+
+    #   # Disconnect any existing sessions before reconnecting interactively
+    #   Disconnect-Graph
+    #   Disconnect-MgGraph -Verbose
+
+    #   # Path to the scopes.json file (adjust this path as necessary)
+    #   $jsonFilePath = "$PSScriptRoot\scopes.json"
+
+    #   # Read the JSON file and extract scopes
+    #   $jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+    #   $scopes = $jsonContent.Scopes -join " "
+
+    #   # Connect to Microsoft Graph interactively using the specified scopes
+    #   Write-EnhancedLog -Message "Connecting to Microsoft Graph interactively..." -Level "INFO"
+    #   Connect-ToMicrosoftGraphIfServerCore -Scopes $scopes
+
+
+
+    try {
+        # Attempt to connect using the certificate
+        Write-EnhancedLog -Message "Attempting to connect to Microsoft Graph using certificate authentication..." -Level "INFO"
+        $accessToken = Connect-GraphWithCert @graphParams
+        Write-EnhancedLog -Message "Connected using certificate authentication. Access token obtained." -Level "INFO"
+    
+        # Attempt to get tenant details
+        Write-EnhancedLog -Message "Attempting to retrieve tenant details..." -Level "INFO"
+        $tenantDetails = Get-TenantDetails
+
+        # Check if tenant details are retrieved successfully
+        if ($null -eq $tenantDetails) {
+            Write-EnhancedLog -Message "Tenant details could not be retrieved." -Level 'WARNING'
+        }
+        Write-EnhancedLog -Message "Tenant details retrieved successfully." -Level "INFO"
+    }
+    catch {
+        # Handle any errors during certificate-based authentication
+        $errorMessage = "Failed to connect using certificate-based authentication or retrieve tenant details. Reason: $($_.Exception.Message)"
+        Write-EnhancedLog -Message $errorMessage -Level "ERROR"
+
+        # Log that we are falling back to interactive authentication
+        Write-EnhancedLog -Message "Falling back to interactive authentication..." -Level "WARNING"
+
+        # Disconnect any existing sessions before reconnecting interactively
+        Disconnect-Graph
+        Disconnect-MgGraph -Verbose
+
+        # Path to the scopes.json file (adjust this path as necessary)
+        # $jsonFilePath = "$PSScriptRoot\scopes.json"
+
+        # Read the JSON file and extract scopes
+        # $jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+        # $scopes = $jsonContent.Scopes -join " "
+
+        # Connect to Microsoft Graph interactively using the specified scopes
+        Write-EnhancedLog -Message "Connecting to Microsoft Intune interactively..." -Level "INFO"
+        # Connect-ToMicrosoftGraphIfServerCore -Scopes $scopes
+
+
+
+        $ClientID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+
+
+        try {  
+            Connect-MSIntuneGraph -TenantID "$TenantID" -ClientID $ClientID -Interactive
+        }
+        catch {
+            Write-Log "ERROR: Connect-MSIntuneGraph Failed. Exiting" -ForegroundColor "Red"
+            break
+        }
+    
+
+
+
+        # Attempt to get tenant details again interactively
+        # $tenantDetails = Get-TenantDetails
+
+        # if ($null -eq $tenantDetails) {
+        # Write-EnhancedLog -Message "Unable to proceed without tenant details" -Level "ERROR"
+        # throw "Tenant details retrieval failed interactively. Cannot proceed without valid tenant details."
+        # }
+        # Write-EnhancedLog -Message "Tenant details retrieved successfully after interactive authentication." -Level "INFO"
     }
 
-    # Connect to Microsoft Graph, Intune, and Teams
-    $accessToken = Connect-GraphWithCert @graphParams
+    # Continue with the script logic now that tenant details are retrieved
+    Log-Params -Params @{accessToken = $accessToken; tenantDetails = $tenantDetails }
 
-    Log-Params -Params @{accessToken = $accessToken }
+    # Example output of tenant details
+    $tenantDetails
 
-    Get-TenantDetails
+
+
+ 
+
+
+
+
+
+
+
+
+
     #################################################################################################################################
     ################################################# END Connecting to Graph #######################################################
     #################################################################################################################################
