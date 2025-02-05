@@ -1,0 +1,1 @@
+if (Test-Path "C:\Program Files (x86)\TeamViewer\TeamViewer.exe") { Write-Output "F"; exit 0 } else { exit 1 }

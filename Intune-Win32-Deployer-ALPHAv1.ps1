@@ -317,7 +317,14 @@ try {
     }
 
     # Load the secrets from the JSON file
+    Write-EnhancedLog -Message "Loading secrets from: $secretsJsonPath" -Level 'INFO'
     $secrets = Get-Content -Path $secretsJsonPath -Raw | ConvertFrom-Json
+
+    # Debug: List all available properties in secrets
+    Write-EnhancedLog -Message "Available properties in secrets file:" -Level 'INFO'
+    $secrets.PSObject.Properties | ForEach-Object {
+        Write-EnhancedLog -Message "Property: $($_.Name) = $($_.Value)" -Level 'INFO'
+    }
 
     # Check if a PFX file exists
     if ($pfxFiles.Count -eq 0) {
@@ -331,13 +338,39 @@ try {
 
     # Use the first (and presumably only) PFX file found
     $certPath = $pfxFiles[0].FullName
-
     Write-EnhancedLog -Message "PFX file found: $certPath" -Level 'INFO'
 
-    # Assign values from JSON to variables
-    $tenantId = $secrets.TenantId
-    $clientId = $secrets.ClientId
-    $CertPassword = $secrets.CertPassword
+    # Assign values from JSON to variables with detailed logging
+    Write-EnhancedLog -Message "Attempting to load TenantID..." -Level 'INFO'
+    $tenantId = $secrets.PSObject.Properties['TenantID'].Value
+    Write-EnhancedLog -Message "Loaded TenantID: $tenantId" -Level 'INFO'
+
+    Write-EnhancedLog -Message "Attempting to load ClientId..." -Level 'INFO'
+    $clientId = $secrets.PSObject.Properties['ClientId'].Value
+    Write-EnhancedLog -Message "Loaded ClientId: $clientId" -Level 'INFO'
+
+    Write-EnhancedLog -Message "Attempting to load CertPassword..." -Level 'INFO'
+    $CertPassword = $secrets.PSObject.Properties['CertPassword'].Value
+    Write-EnhancedLog -Message "CertPassword loaded (value hidden for security)" -Level 'INFO'
+
+    # Validate the required values with detailed error messages
+    if ([string]::IsNullOrWhiteSpace($tenantId)) {
+        Write-EnhancedLog -Message "TenantID is missing or empty in secrets.json" -Level 'ERROR'
+        throw "TenantID is missing or empty in secrets.json"
+    }
+    if ([string]::IsNullOrWhiteSpace($clientId)) {
+        Write-EnhancedLog -Message "ClientId is missing or empty in secrets.json" -Level 'ERROR'
+        throw "ClientId is missing or empty in secrets.json"
+    }
+    if ([string]::IsNullOrWhiteSpace($CertPassword)) {
+        Write-EnhancedLog -Message "CertPassword is missing or empty in secrets.json" -Level 'ERROR'
+        throw "CertPassword is missing or empty in secrets.json"
+    }
+
+    Write-EnhancedLog -Message "Successfully loaded all required authentication details from secrets.json" -Level 'INFO'
+    Write-EnhancedLog -Message "TenantID length: $($tenantId.Length) characters" -Level 'INFO'
+    Write-EnhancedLog -Message "ClientId length: $($clientId.Length) characters" -Level 'INFO'
+    Write-EnhancedLog -Message "CertPassword length: $($CertPassword.Length) characters" -Level 'INFO'
 
 
     #endregion LOADING SECRETS FOR GRAPH
@@ -521,6 +554,29 @@ try {
 
 
     try {
+        # Log the values right before connecting
+        Write-EnhancedLog -Message "Preparing to connect with the following values:" -Level 'INFO'
+        Write-EnhancedLog -Message "TenantID: $tenantId" -Level 'INFO'
+        Write-EnhancedLog -Message "ClientID: $clientId" -Level 'INFO'
+        Write-EnhancedLog -Message "CertPath: $certPath" -Level 'INFO'
+        Write-EnhancedLog -Message "CertPassword length: $($CertPassword.Length)" -Level 'INFO'
+
+        # Create hashtable for splatting with explicit string conversions
+        $graphParams = @{
+            tenantId = [string]$tenantId
+            clientId = [string]$clientId
+            certPath = [string]$certPath
+            certPassword = [string]$CertPassword
+            ConnectToIntune = $true
+            ConnectToTeams = $false
+        }
+
+        # Log the hashtable values
+        Write-EnhancedLog -Message "Checking splat parameters:" -Level 'INFO'
+        Write-EnhancedLog -Message "tenantId from splat: $($graphParams.tenantId)" -Level 'INFO'
+        Write-EnhancedLog -Message "clientId from splat: $($graphParams.clientId)" -Level 'INFO'
+        Write-EnhancedLog -Message "certPath from splat: $($graphParams.certPath)" -Level 'INFO'
+
         # Attempt to connect using the certificate
         Write-EnhancedLog -Message "Attempting to connect to Microsoft Graph using certificate authentication..." -Level "INFO"
         $accessToken = Connect-GraphWithCert @graphParams
@@ -540,49 +596,21 @@ try {
         # Handle any errors during certificate-based authentication
         $errorMessage = "Failed to connect using certificate-based authentication or retrieve tenant details. Reason: $($_.Exception.Message)"
         Write-EnhancedLog -Message $errorMessage -Level "ERROR"
+        Write-EnhancedLog -Message "Full error details: $($_ | ConvertTo-Json)" -Level "ERROR"
 
         # Log that we are falling back to interactive authentication
         Write-EnhancedLog -Message "Falling back to interactive authentication..." -Level "WARNING"
 
-        # Disconnect any existing sessions before reconnecting interactively
-        Disconnect-Graph
-        Disconnect-MgGraph -Verbose
-
-        # Path to the scopes.json file (adjust this path as necessary)
-        # $jsonFilePath = "$PSScriptRoot\scopes.json"
-
-        # Read the JSON file and extract scopes
-        # $jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
-        # $scopes = $jsonContent.Scopes -join " "
-
-        # Connect to Microsoft Graph interactively using the specified scopes
-        Write-EnhancedLog -Message "Connecting to Microsoft Intune interactively..." -Level "INFO"
-        # Connect-ToMicrosoftGraphIfServerCore -Scopes $scopes
-
-
-
-        $ClientID = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
-
-
-        try {  
-            Connect-MSIntuneGraph -TenantID "$TenantID" -ClientID $ClientID -Interactive
+        try {
+            Write-EnhancedLog -Message "Attempting interactive authentication with TenantID: $tenantId" -Level "INFO"
+            Connect-MSIntuneGraph -TenantID $tenantId -Interactive
+            Write-EnhancedLog -Message "Interactive authentication successful" -Level "INFO"
         }
         catch {
-            Write-Log "ERROR: Connect-MSIntuneGraph Failed. Exiting" -ForegroundColor "Red"
-            break
+            Write-EnhancedLog -Message "Interactive authentication failed: $($_.Exception.Message)" -Level "ERROR"
+            Write-EnhancedLog -Message "Full error details: $($_ | ConvertTo-Json)" -Level "ERROR"
+            throw
         }
-    
-
-
-
-        # Attempt to get tenant details again interactively
-        # $tenantDetails = Get-TenantDetails
-
-        # if ($null -eq $tenantDetails) {
-        # Write-EnhancedLog -Message "Unable to proceed without tenant details" -Level "ERROR"
-        # throw "Tenant details retrieval failed interactively. Cannot proceed without valid tenant details."
-        # }
-        # Write-EnhancedLog -Message "Tenant details retrieved successfully after interactive authentication." -Level "INFO"
     }
 
     # Continue with the script logic now that tenant details are retrieved
