@@ -1,0 +1,9 @@
+{
+    "PrinterName": "Lexamrk Front Desk - Notre Dame Medical Clinic",
+    "PrinterIPAddress": "192.168.2.79",
+    "PortName": "IP_192.168.2.79",
+    "DriverName": "Lexmark Universal v2",
+    "InfPathRelative": "Driver\\LMUD1n40.inf",
+    "InfFileName": "LMUD1n40.inf",
+    "DriverIdentifier": "amd64_51d0ca74e641a8db"
+}

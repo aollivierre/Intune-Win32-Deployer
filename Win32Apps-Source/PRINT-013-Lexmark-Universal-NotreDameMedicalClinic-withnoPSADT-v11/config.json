@@ -1,0 +1,9 @@
+{
+  "PackageName": "PRINT-013-Lexmark-Universal-NotreDameMedicalClinic-withnoPSADT-v11",
+  "PackageUniqueGUID": "0def9ead-e115-42c1-b868-46a2fd18c12d",
+  "Version": 1,
+  "PackageExecutionContext": "SYSTEM",
+  "RepetitionInterval": "PT60M",
+  "LoggingDeploymentName": "PRINT-013-Lexmark-Universal-NotreDameMedicalClinic-withnoPSADT-v11",
+  "ScriptMode": "Remediation"
+}
