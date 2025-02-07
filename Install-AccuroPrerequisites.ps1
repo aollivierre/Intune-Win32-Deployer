@@ -27,7 +27,15 @@ function Write-Log {
     $LineFormat = $Message, $TimeGenerated, (Get-Date -Format MM-dd-yyyy), $Script:ScriptName, $Level
     $Line = $Line -f $LineFormat
 
-    Add-Content -Value $Line -Path $Script:LogPath -Encoding UTF8
+    # Create a mutex for thread-safe file access
+    $mutex = New-Object System.Threading.Mutex($false, "Global\AccuroPrerequisitesLogMutex")
+    try {
+        $mutex.WaitOne() | Out-Null
+        Add-Content -Value $Line -Path $Script:LogPath -Encoding UTF8
+    }
+    finally {
+        $mutex.ReleaseMutex()
+    }
     Write-Host $Message
 }
 
@@ -382,7 +390,15 @@ try {
             $LineFormat = "$componentName - $Message", $TimeGenerated, (Get-Date -Format MM-dd-yyyy), "AccuroPrerequisites_Install", $Level
             $Line = $Line -f $LineFormat
 
-            Add-Content -Value $Line -Path $logPath -Encoding UTF8
+            # Create a mutex for thread-safe file access
+            $mutex = New-Object System.Threading.Mutex($false, "Global\AccuroPrerequisitesLogMutex")
+            try {
+                $mutex.WaitOne() | Out-Null
+                Add-Content -Value $Line -Path $logPath -Encoding UTF8
+            }
+            finally {
+                $mutex.ReleaseMutex()
+            }
             Write-Host "$componentName - $Message"
         }
 
@@ -406,9 +422,10 @@ try {
                     $attempt++
                     Write-Log "Downloading... Attempt $attempt" -Level Information
 
-                    # Attempt download using BITS
-                    Start-BitsTransfer -Source $Source -Destination $Destination -ErrorAction Stop
-
+                    # Try WebClient first
+                    $webClient = [System.Net.WebClient]::new()
+                    $webClient.DownloadFile($Source, $Destination)
+                    
                     if (Test-Path $Destination) {
                         $fileInfo = Get-Item $Destination
                         if ($fileInfo.Length -gt 0) {
@@ -426,27 +443,26 @@ try {
                     }
                 }
                 catch {
-                    Write-Log "Download attempt failed: $($_.Exception.Message)" -Level Warning
+                    Write-Log "WebClient download failed: $($_.Exception.Message)" -Level Warning
                     if ($attempt -eq $MaxRetries) {
-                        Write-Log "Trying WebClient as fallback..." -Level Warning
+                        Write-Log "Trying BITS as fallback..." -Level Warning
                         try {
-                            $webClient = [System.Net.WebClient]::new()
-                            $webClient.DownloadFile($Source, $Destination)
-                        
+                            Start-BitsTransfer -Source $Source -Destination $Destination -ErrorAction Stop
+                            
                             if (Test-Path $Destination) {
                                 $fileInfo = Get-Item $Destination
                                 if ($fileInfo.Length -gt 0) {
-                                    Write-Log "Download completed via WebClient" -Level Information
+                                    Write-Log "Download completed via BITS" -Level Information
                                     $success = $true
                                 }
                                 else {
-                                    Write-Log "WebClient download failed: Empty file" -Level Error
-                                    throw "WebClient download failed: Empty file"
+                                    Write-Log "BITS download failed: Empty file" -Level Error
+                                    throw "BITS download failed: Empty file"
                                 }
                             }
                             else {
-                                Write-Log "WebClient download failed: File not found" -Level Error
-                                throw "WebClient download failed: File not found"
+                                Write-Log "BITS download failed: File not found" -Level Error
+                                throw "BITS download failed: File not found"
                             }
                         }
                         catch {
