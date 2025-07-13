@@ -53,7 +53,7 @@ function Relaunch-InPowerShell5 {
     Write-Host "Hello from PowerShell 5"
 }
 
-
+Relaunch-InPowerShell5
 
 
 #endregion RE-LAUNCH SCRIPT IN POWERSHELL 5 FUNCTION
@@ -394,151 +394,13 @@ try {
                 # Store the certificate object globally for later use
                 $Global:CertObject = $cert
                 
-                # Check if PowerShell 7 is available for CNG certificate handling
-                $ps7Path = "C:\Program Files\PowerShell\7\pwsh.exe"
-                $usePS7Auth = Test-Path $ps7Path
-                
-                if ($usePS7Auth) {
-                    Write-EnhancedLog -Message "Using PowerShell 7 for certificate authentication (better CNG support)..." -Level "INFO"
-                    
-                    # Create a temporary script to run in PS7
-                    $ps7ScriptContent = @"
-# PowerShell 7 Authentication Script
-param(
-    [string]`$TenantId,
-    [string]`$ClientId,
-    [string]`$CertPath,
-    [string]`$CertPassword
-)
-
-try {
-    Import-Module MSAL.PS -ErrorAction Stop
-    
-    # Load certificate - PS7 handles CNG certificates better
-    `$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(`$CertPath, `$CertPassword)
-    
-    # Get token
-    `$msalToken = Get-MsalToken -TenantId `$TenantId -ClientId `$ClientId -ClientCertificate `$cert
-    
-    if (`$msalToken) {
-        # Create token data for PS5
-        `$tokenData = @{
-            AccessToken = `$msalToken.AccessToken
-            ExpiresOn = `$msalToken.ExpiresOn.ToString("o")
-            TenantId = `$TenantId
-            ClientId = `$ClientId
-            TokenType = "Bearer"
-        }
-        
-        # Save to temp file
-        `$tokenFile = Join-Path `$env:TEMP "intune_auth_token.json"
-        `$tokenData | ConvertTo-Json | Set-Content `$tokenFile -Force
-        
-        Write-Host "SUCCESS"
-        exit 0
-    }
-}
-catch {
-    Write-Host "ERROR: `$_"
-    exit 1
-}
-"@
-                    
-                    # Save PS7 script temporarily
-                    $ps7ScriptPath = Join-Path $env:TEMP "Get-IntuneAuthPS7.ps1"
-                    $ps7ScriptContent | Set-Content $ps7ScriptPath -Force
-                    
-                    # Run PS7 to get the token
-                    $ps7Args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$ps7ScriptPath`"", "-TenantId", $tenantId, "-ClientId", $clientId, "-CertPath", "`"$certPath`"", "-CertPassword", "`"$CertPassword`"")
-                    $ps7Process = Start-Process -FilePath $ps7Path -ArgumentList $ps7Args -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\ps7_auth_output.txt"
-                    
-                    # Check if PS7 authentication succeeded
-                    if ($ps7Process.ExitCode -eq 0) {
-                        # Load the token from PS7
-                        $tokenFile = Join-Path $env:TEMP "intune_auth_token.json"
-                        if (Test-Path $tokenFile) {
-                            $tokenData = Get-Content $tokenFile -Raw | ConvertFrom-Json
-                            
-                            # Set up global variables in the format IntuneWin32App expects
-                            $expiresOn = [DateTime]::Parse($tokenData.ExpiresOn).ToUniversalTime()
-                            
-                            # Create the AccessToken object to match what IntuneWin32App expects
-                            # The module expects ExpiresOn to be a DateTimeOffset with UtcDateTime property
-                            $expiresOnOffset = [DateTimeOffset]::new($expiresOn)
-                            
-                            $Global:AccessToken = [PSCustomObject]@{
-                                AccessToken = $tokenData.AccessToken
-                                ExpiresOn = $expiresOnOffset
-                                TokenType = $tokenData.TokenType
-                            }
-                            
-                            $Global:AccessTokenTenantID = $tokenData.TenantId
-                            $Global:AuthenticationHeader = @{
-                                "Content-Type" = "application/json"
-                                "Authorization" = "$($tokenData.TokenType) $($tokenData.AccessToken)"
-                                "ExpiresOn" = $expiresOn.ToString()
-                            }
-                            
-                            Write-EnhancedLog -Message "PowerShell 7 authentication successful" -Level "INFO"
-                            Write-EnhancedLog -Message "Token expires at: $expiresOn" -Level "INFO"
-                            
-                            # Test authentication
-                            try {
-                                $testUri = "https://graph.microsoft.com/v1.0/organization"
-                                $testResult = Invoke-RestMethod -Uri $testUri -Headers $Global:AuthenticationHeader -Method Get -ErrorAction Stop
-                                Write-EnhancedLog -Message "Authentication verified - connected to tenant: $($testResult.value[0].displayName)" -Level "INFO"
-                            }
-                            catch {
-                                Write-EnhancedLog -Message "Authentication test warning: $($_.Exception.Message)" -Level "WARNING"
-                            }
-                            
-                            # Clean up temp files
-                            Remove-Item $ps7ScriptPath -Force -ErrorAction SilentlyContinue
-                            Remove-Item "$env:TEMP\ps7_auth_output.txt" -Force -ErrorAction SilentlyContinue
-                        }
-                        else {
-                            throw "PowerShell 7 did not create token file"
-                        }
-                    }
-                    else {
-                        # PS7 auth failed, read the output for debugging
-                        $ps7Output = Get-Content "$env:TEMP\ps7_auth_output.txt" -Raw -ErrorAction SilentlyContinue
-                        Write-EnhancedLog -Message "PowerShell 7 authentication failed: $ps7Output" -Level "ERROR"
-                        throw "PowerShell 7 authentication failed"
-                    }
-                }
-                else {
-                    # Fallback to PS5 direct MSAL (will likely fail with CNG certs)
-                    Write-EnhancedLog -Message "PowerShell 7 not found. Using direct MSAL authentication (may fail with CNG certificates)..." -Level "WARNING"
-                    
-                    # Import MSAL.PS module
-                    Import-Module MSAL.PS -ErrorAction Stop
-                    
-                    # Get token using MSAL.PS directly
-                    Write-EnhancedLog -Message "Requesting token from Azure AD with TenantID: $tenantId, ClientID: $clientId" -Level "INFO"
-                    $msalToken = Get-MsalToken -TenantId $tenantId -ClientId $clientId -ClientCertificate $cert
-                    
-                    if ($msalToken) {
-                        # Set up global variables in the format IntuneWin32App expects
-                        $Global:AccessToken = $msalToken
-                        $Global:AccessTokenTenantID = $tenantId
-                        
-                        # Create the authentication header manually
-                        $Global:AuthenticationHeader = @{
-                            "Content-Type" = "application/json"
-                            "Authorization" = "Bearer $($msalToken.AccessToken)"
-                            "ExpiresOn" = $msalToken.ExpiresOn.UtcDateTime
-                        }
-                        
-                        Write-EnhancedLog -Message "Direct MSAL authentication successful" -Level "INFO"
-                        Write-EnhancedLog -Message "Token expires at: $($msalToken.ExpiresOn)" -Level "INFO"
-                    } else {
-                        throw "Failed to obtain access token from MSAL.PS"
-                    }
-                }
+                # Connect using IntuneWin32App module - pass the certificate object directly
+                Write-EnhancedLog -Message "Calling Connect-MSIntuneGraph with TenantID: $tenantId, ClientID: $clientId" -Level "INFO"
+                Connect-MSIntuneGraph -TenantID $tenantId -ClientID $clientId -ClientCert $cert
+                Write-EnhancedLog -Message "Successfully authenticated with IntuneWin32App module" -Level "INFO"
             }
             catch {
-                Write-EnhancedLog -Message "Failed to authenticate with direct MSAL: $($_.Exception.Message)" -Level "WARNING"
+                Write-EnhancedLog -Message "Failed to authenticate with IntuneWin32App module: $($_.Exception.Message)" -Level "WARNING"
                 Write-EnhancedLog -Message "Will attempt interactive authentication if needed later" -Level "INFO"
             }
         

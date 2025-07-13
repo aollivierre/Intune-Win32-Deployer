@@ -1,0 +1,14 @@
+{
+    "LogLevel" : "1",
+    "SyncServer" : "https://api.opendns.com/v2/",
+    "Org_ID" : "8329794",
+    "Org_Token" : "d1c3f944503fcca3f8a4cdee2d39ba2b758e6a014dfca082f1884934a237675c",
+    "FedRamp" : "0",
+    "TokenGenerationURL": "https://api.umbrella.com/auth/v2/token",
+    "Credentials" : { 
+        "ClientApiKey": "",
+        "ClientApiSecret": ""
+    },
+    "SyncGwServer" : "https://api.umbrella.com",
+    "AuthType" : "fallback"
+}

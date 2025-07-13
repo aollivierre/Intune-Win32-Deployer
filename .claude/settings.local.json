@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(pwsh ./test-icon-path.ps1)",
+      "Bash(powershell.exe:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(powershell:*)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Test-Authentication.ps1)",
+      "Bash(/mnt/c/Program Files/PowerShell/7/pwsh.exe -NoProfile -File Get-AuthTokenPS7.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Use-SavedAuthToken.ps1)",
+      "Bash(cat:*)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Test-IntegratedAuth.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -Command \"Write-Host ''''Testing authentication in main script...'''' -ForegroundColor Yellow; . .\\Intune-Win32-Deployer-ALPHAv1.ps1\")",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Test-AuthOnly.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Fix-DateTimeError.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Reload-AuthToken.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Test-DateTimeFix.ps1)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -ExecutionPolicy Bypass -File Debug-TokenStructure.ps1)",
+      "Bash(rm:*)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -Command \"cd ''''C:\\Code\\Intune-Win32-Deployer''''; .\\Intune-Win32-Deployer-ALPHAv1.ps1\")",
+      "Bash(timeout:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,1606 @@
+<job>
+<script Language="VBScript">
+Option Explicit
+
+'*************************************************************************************************************
+' START MAIN
+'*************************************************************************************************************
+
+' GLOBAL DEFINITIONS
+
+' This will now be the default sAMAccountName, if the user leaves the prompt for Service Account name empty. 
+Const ACCOUNT_NAME = "Cisco_Connector"
+
+' Check this is being launched by cscript
+'********************************************************
+if (instr(lcase(WScript.FullName), "wscript")) Then
+    MsgBox "Use " & chr(34) & "cscript " & WScript.ScriptName & chr(34) & " to run this script." & vbcrlf & vbcrlf & _
+            "This script must be run from an elevated command prompt", vbCritical, "DCSetup: Incorrect scripting engine"
+    WScript.Quit
+End if
+
+' Needed globals
+'********************************************************
+Dim gOS ' Can be 0=Reserved,1=2003,2=2008,3=2012,4=Win7,5=Other,6=2016,7=2019,8=Microsoft Windows Server Standard,9=Microsoft Windows Server Datacenter,10=2022
+Dim gFunctionalLevel ' Can be 0=mixed, 1=2003-interim, 2=2003, 3=2008, 4=2008r2, 5=2012, 6=2016r2, 7=2016
+Dim gSP
+Dim gR2 ' Empty means it's not R2
+Dim gDomain
+Dim gDomainFull
+Dim gOrgID
+Dim gCustomerID_Token
+Dim gIntIP
+Dim gServerLabel
+Dim gAssetType
+Dim gToken
+Dim gAccessToken
+Dim gUptime
+Dim gCloudEndpoint
+Dim gTokenEndpoint
+Dim gAuthType
+Dim gApiGwURL
+Dim gVersion
+Dim gDomainFullyQualifiedDomain
+Dim gAccountName
+Dim gClientId
+Dim gClientSecret
+Dim gFedramp
+Dim gOauthAuthentication
+Dim gFWChecked, gFWEnabled, gFWRemoteAdmin, gADUserExists, gRDCPermissions, gELRMember, gForceNetBios
+Dim gManageELPSet
+Dim gForceUserExists, gForceFW, gForceAdmin, gForceFL, gForceRegister, gForceNonVA
+Dim gAccountSID
+Dim gObjSvc, gObjSecurity
+Dim gObjRegistry
+Dim regdec
+Dim decision
+
+gDomainFullyQualifiedDomain = ""
+gOrgID = "8329794"
+gClientId = ""
+gClientSecret = ""
+gTokenEndpoint = "https://api.umbrella.com/auth/v2/token"
+gFedramp = "0"
+gAuthType = "fallback"
+gApiGwURL = "https://api.umbrella.com"
+
+gCustomerID_Token = "d1c3f944503fcca3f8a4cdee2d39ba2b758e6a014dfca082f1884934a237675c"
+gCloudEndpoint = "https://api.opendns.com/v2/"
+gOS = 0
+gFunctionalLevel = 0
+gSP = ""
+gR2 = ""
+gVersion = "1.1.26"
+gServerLabel = "DefaultLabel"
+gAssetType = "domain_controller" ' Means DC
+gToken = ""
+gAccessToken = ""
+gUptime = 0
+gOauthAuthentication = "0"
+If (gFedramp) = "1" Then
+   gOauthAuthentication = "1"
+End If
+
+If (((gAuthType = "enhanced") Or (gAuthType = "fallback")) And ((gClientId <> "") And (gClientSecret <> ""))) Then
+   gOauthAuthentication = "1"
+   gCloudEndpoint = gApiGwURL
+ElseIf (((gAuthType = "legacy") Or (gAuthType = "fallback")) And (gCustomerID_Token <> "")) Then
+   gOauthAuthentication = "0"
+Else
+   gOauthAuthentication = "99"
+   gCloudEndpoint = ""
+End If
+
+' Make sure there is a trailing slash on the endpoint
+If (Right(gCloudEndpoint, 1) <> "/") Then
+   gCloudEndpoint = gCloudEndpoint + "/"
+End If
+
+' Globals that are set during Test functions, and must be True to be considered "configured"
+gFWChecked = True
+gFWEnabled = False
+gFWRemoteAdmin = False
+gADUserExists = False
+gRDCPermissions = False
+gELRMember = False
+gForceNetBios = ""
+
+gManageELPSet = False
+
+gForceUserExists = False
+gForceFW = False
+gForceAdmin = False
+gForceFL = False
+gForceRegister = False
+gForceNonVA = False 'False means VA Mode. Business as usual'
+
+' Account ID, needed by other functions
+gAccountSID = ""
+
+' Global WMI objects
+' Connect to WMI root\cimv2 namespace (needed by many other functions)
+Set gObjSvc = GetObject("WINMGMTS:root/cimv2")
+' Get the single __SystemSecurity object in this namespace
+Set gObjSecurity = gObjSvc.Get("__SystemSecurity=@")
+
+' Registry globals and constants
+Set gObjRegistry = GetObject("WINMGMTS:root/default:StdRegProv")
+Const HKEY_LOCAL_MACHINE = &H80000002
+Const DCOM_REG_PATH = "SOFTWARE\Microsoft\Ole\"
+Const DCOM_REG_KEY = "MachineLaunchRestriction"
+
+' WMI constants
+Const SE_DACL_PRESENT = &h4
+Const ACCESS_ALLOWED_ACE_TYPE = &h0
+Const ACE_ENABLE_ACCOUNT = 1 ' Read
+Const ACE_REMOTE_ENABLE = 32 ' Execute/Traverse
+Const ACE_READ_SECURITY = 131072 ' Read Control
+
+' DCOM constants
+Const DCOM_ENABLE_ACCOUNT = 1 ' Create Child
+Const DCOM_REMOTE_LAUNCH = 4 ' List Children
+Const DCOM_REMOTE_ACTIVATION = 16 ' Read Property
+
+' RDC constants
+Const ADS_RIGHT_DS_CONTROL_ACCESS = &H100
+Const ADS_ACETYPE_ACCESS_ALLOWED_OBJECT = &H5   'Allows an object to do something
+Const ADS_FLAG_OBJECT_TYPE_PRESENT = &H1   'Target object type is present in the ACE 
+Const SCHEMA_GUID_MS_REPLICATION_GET_CHANGES = "{1131F6AA-9C07-11D1-F79F-00C04FC2DCD2}"
+
+' Group constants
+Const ELR_SID = "S-1-5-32-573"
+Const DCOM_SID = "S-1-5-32-562"
+
+
+' Args
+'********************************************************
+CollectArgs()
+
+' OS Test - Do this early for conditional checks later on based on OS
+'********************************************************
+TestOS()
+
+' Check for Administrator privileges
+'********************************************************
+If (IsAdmin() <> 1) Then
+    WScript.Echo "Insufficient privileges detected!"
+    If (gForceAdmin) Then
+        WScript.Echo "Installation will be allowed to continue. However, if the script"
+        WScript.Echo "encounters errors, please make sure it is run from an administrator acccount."
+    Else
+        WScript.Echo "Please run this script as an Administrator user."
+        WScript.Echo "Or, right-click the Command Prompt icon and 'Run as Administrator'."
+        WScript.Echo "If you wish to continue anyway, run the script with the '--forceAdmin true' argument."
+        WScript.Quit
+    End If
+End If
+
+' Detect Config
+'********************************************************
+WScript.Echo "Testing configuration..."
+gIntIP = GetIPAddress()
+
+If (gDomain = "") Then
+	If (gForceNetBios) = "" Then
+		gDomain = GetComputerDomainName() ' This is actually NetBIOS name
+	Else
+		gDomain = gForceNetBios
+	End If
+End If
+
+gDomainFull = GetComputerFullDomainName()
+gServerLabel = GetComputerHostName()
+gDomainFullyQualifiedDomain = GetDomainFullName()
+WScript.Echo  "Full Computer Domain : " & gDomainFullyQualifiedDomain
+
+'The following if block is to check if CollectArgs has set a value for gAccountName with the --username parameter, else set to default - Cisco_Connector
+If gAccountName = "" Then
+    gAccountName = ACCOUNT_NAME
+End If
+
+
+If (gForceRegister) Then
+   WScript.Echo "Forcing Register"
+   If gOauthAuthentication="0" Then   
+      SendAssetRegister()
+      SendAssetUpdate()
+   ElseIf gOauthAuthentication="1" Then
+      SendForAuthToken()
+      SendAssetRegisterEnhancedAuth()
+      SendForAuthToken()
+      SendAssetUpdateEnhancedAuth()         
+   Else
+      WScript.Echo("Register failure. Unauthorized, missing mandatory credentials.")
+   End If
+   WScript.Echo "Exiting before configuration!"
+   WScript.Quit
+End If
+
+TestRemoteAdmin()
+TestADUser()
+If (gADUserExists And (gAccountSID <> "")) Then
+   ' Tests that require an AD user already configured
+   TestRDC()
+   TestELR()
+   TestManageELPolicy()
+Else
+   'WScript.Echo "Skipping tests that require an AD User..."
+End If
+
+' Alert admin to state, ask if he wants auto config
+WScript.Echo ""
+WScript.Echo "***********************************************"
+WScript.Echo "Local Platform Configuration"
+WScript.Echo ""
+WScript.Echo "Local OS: " & OSToString(gOS)
+WScript.Echo "Functional Level: " & FLToString(gFunctionalLevel)
+WScript.Echo "Local IP: " & gIntIP
+WScript.Echo "Domain:   " & gDomainFull & " (" & gDomain & ")"
+WScript.Echo "Label:    " & gServerLabel
+If (gFWChecked) Then 
+   WScript.Echo "Firewall Enabled: " & gFWEnabled
+   WScript.Echo ""
+   WScript.Echo "Remote Admin Enabled: " & gFWRemoteAdmin
+Else
+   WScript.Echo "Firewall Enabled: unknown" 
+   WScript.Echo ""
+   WScript.Echo "Remote Admin Enabled: unknown"
+End If
+
+If (((gOS = 2) Or (gOS = 3) Or (gOS = 6) Or (gOS = 7) or (gOS = 8) or (gOS = 9) or (gOS = 10)) And (gFunctionalLevel >= 3)) Then
+   ' Windows Server 2008, 2012 and 2016 (functional level) can be fully configured
+   ' Event Log Reader membership only exists in 2008+
+   WScript.Echo "AD User Exists: " & gADUserExists
+   WScript.Echo "RDC Permissions Set: " & gRDCPermissions
+   If (gForceNonVA = False) Then
+        WScript.Echo ""
+        WScript.Echo "Manage Event Log Policy Set: " & gManageELPSet
+        WScript.Echo ""
+        WScript.Echo "Event Log Readers MemberOf: " & gELRMember
+   End If
+   WScript.Echo "***********************************************"
+   WScript.Echo ""
+
+   ' Outcome
+   ' If we're already configured in full, we don't need to do anything
+   If (IsConfiguredInFull()) Then
+      WScript.Echo "Domain Controller is fully configured!"
+        AutoRegisterDC()
+   ElseIf (gADUserExists = False) Then
+      WScript.Echo "Could not find user " & gAccountName & " in domain " + gDomain + _
+          ".  Please create one, or use the --forceDomain DOMAIN or --forceUserExists true command line argument."
+   Else
+      WScript.Echo "Your platform is supported for auto-configure."
+
+      ' Decide if they want to auto config
+      decision = UserInput("Do you want us to auto configure this Domain Controller (y or n)?")
+      
+      If InStr(decision,"y")=1 Then
+         If (DoAutoConfig2008()) Then
+            ' Radio home results
+            AutoRegisterDC()
+         End If
+
+      ElseIf InStr(decision,"n")=1 Then
+         WScript.Echo ""
+         WScript.Echo ""
+         WScript.Echo "INFO:"
+         WScript.Echo "*-----------------------------------------------------------"
+         WScript.Echo "Use the settings table above to decide if you will need to "
+         WScript.Echo "manually configure your Domain Controller."
+         WScript.Echo "Check the documentation for further details."
+         WScript.Echo "*-----------------------------------------------------------"
+      Else
+         WScript.Echo "Didn't understand input, please re-run to configure"
+      End If
+   End If
+ElseIf ((gOS = 1) Or (gOS = 2) Or (gOS = 3) Or (gOS = 6) Or (gOS = 7) or (gOS = 8) or (gOS = 9) or (gOS = 10)) Then
+   ' Windows Server 2003 functional levels (on any OS)
+   ' Can't QUITE be fully configured; WMI must be done manually
+   WScript.Echo "AD User Exists: " & gADUserExists
+   WScript.Echo "RDC Permissions Set: " & gRDCPermissions
+   If (gForceNonVA = False) Then
+        WScript.Echo ""
+        WScript.Echo "Manage Event Log Policy Set: " & gManageELPSet
+        WScript.Echo ""
+   End If
+   WScript.Echo "***********************************************"
+   WScript.Echo ""
+
+   ' Outcome
+   ' If we're already configured in full, we don't need to do anything
+   If (IsConfiguredInFull()) Then
+     ' Radio home results
+      WScript.Echo "Domain Controller is fully configured!"
+        AutoRegisterDC()
+   ElseIf (gADUserExists = false) Then
+      WScript.Echo "Could not find user " & gAccountName & "  in domain " + gDomain
+      WScript.Echo "Please create one, or add the expected domain as a command line argument."
+      WScript.Echo "If you are sure this message is in error, you can use --forceUserExists true to force the script to continue."
+   Else
+      WScript.Echo "Your platform is supported for auto-configure."
+
+      ' Decide if they want to auto config
+      decision = UserInput("Do you want us to auto configure this Domain Controller (y or n)?")
+      
+      If InStr(decision,"y")=1 Then
+         If (DoAutoConfig2003()) Then
+            ' Radio home results
+            AutoRegisterDC()
+         End If
+
+      ElseIf InStr(decision,"n")=1 Then
+         WScript.Echo ""
+         WScript.Echo ""
+         WScript.Echo "INFO:"
+         WScript.Echo "*-----------------------------------------------------------"
+         WScript.Echo "Use the settings table above to decide if you will need to "
+         WScript.Echo "manually configure your Domain Controller."
+         WScript.Echo "Check the documentation for further details."
+         WScript.Echo "*-----------------------------------------------------------"
+      Else
+         WScript.Echo "Didn't understand input, please re-run to configure"
+      End If
+   End If
+Else
+   WScript.Echo ""
+   WScript.Echo "CONFIG FAILED - Reason: Your platform is not supported"
+   WScript.Echo "Please choose a Domain Controller running at least Windows Server 2003"
+End If
+
+'*************************************************************************************************************
+' END MAIN
+'*************************************************************************************************************
+
+
+' FUNCTIONS
+'*************************************************************************************************************
+
+' Auto Config Functions
+'*****************************
+Function DoAutoConfig2008()
+   WScript.Echo ""
+   WScript.Echo "Configuring system..."
+   
+   ' Configure the firewall, if necessary (Just always run, if firewall is off, doesn't hurt)
+   
+   If (gForceNonVA = False) Then
+      WScript.Echo "Setting Remote Admin permissions on firewall..."
+      SetRemoteAdmin()
+      SetRemoteEventLog()
+      TestRemoteAdmin()
+   End If
+   
+   ' Set other permissions, if necessary and able
+   If (gADUserExists And (gAccountSID <> "")) Then
+      ' Set RDC permissions, if necessary
+      If (gRDCPermissions = False) Then
+         WScript.Echo "Setting RDC permissions..."
+         SetRDC()
+         TestRDC()
+      End If
+
+      ' Add to Event Log Reader group, if necessary
+      If (gELRMember = False) Then
+      	 ' Check if Non VA mode is NOT set
+            WScript.Echo "Adding to Event Log Readers group..."
+            SetELR()
+            TestELR()
+      End If
+      
+      ' The Event Log policy is not required for 2008
+
+   End If
+   
+   If (IsConfiguredInFull()) Then
+      WScript.Echo "Auto Configuration complete in full!"
+      DoAutoConfig2008 = True
+   Else
+      WScript.Echo "Auto Configuration incomplete!"
+      WScript.Echo "You may re-run this script to verify settings."
+      DoAutoConfig2008 = False
+   End If
+End Function
+
+' Version specific 2003
+Function DoAutoConfig2003()
+   Dim override
+   WScript.Echo ""
+   WScript.Echo "Configuring system..."
+   
+   ' Configure the firewall, if necessary (Just always run, if firewall is off, doesn't hurt)
+   
+   If (gForceNonVA = False) Then
+      WScript.Echo "Setting Remote Admin permissions on firewall..."
+      SetRemoteAdmin()
+      SetRemoteEventLog()
+      TestRemoteAdmin()
+   End If
+   
+   ' Set other permissions, if necessary and able
+   If (gADUserExists And (gAccountSID <> "")) Then
+      ' Set RDC permissions, if necessary
+      If (gRDCPermissions = False) Then
+         WScript.Echo "Setting RDC permissions..."
+         SetRDC()
+         TestRDC()
+      End If
+
+      ' There is no Event Log Readers group in 2003, so don't check that
+      
+      ' This policy SHOULD be set for 2003, but consider it just a warning
+      If (gManageELPSet = False) Then
+          WScript.Echo ""
+          WScript.Echo "ERROR: "
+          WScript.Echo "*------------------------------------------------------------------------------"
+          WScript.Echo "You must edit the following Group Policy and apply it to all 2003 DCs: "
+          WScript.Echo ""
+          WScript.Echo "  Computer Configuration\Policies\Windows Settings\Security Settings\"
+          WScript.Echo "    Local Policies\User Rights Assignment\Manage auditing and security log"
+          WScript.Echo ""
+          WScript.Echo "You must add the " & gAccountName & " user to the setting and gpupdate!"
+          WScript.Echo "*------------------------------------------------------------------------------"
+          WScript.Echo ""
+      End If
+   End If
+   
+   If (IsConfiguredInFull()) Then
+      WScript.Echo "Auto Config complete in full!"
+      DoAutoConfig2003 = True
+   Else
+      WScript.Echo ""
+      override = UserInput("Do you want to force register anyway (y or n)?")
+      If InStr(override,"y")=1 Then
+         DoAutoConfig2003 = True
+      ElseIf InStr(override,"n")=1 Then
+         WScript.Echo ""
+         WScript.Echo "Auto Config incomplete!"
+         WScript.Echo "You will need to manually set WMI permissions and correct any errors."
+         WScript.Echo "Then you may re-run this script and force register."
+         DoAutoConfig2003 = False
+      Else
+         WScript.Echo "Didn't understand input, please re-run to configure"
+      End If
+   End If
+End Function
+
+' OS Test Function
+'*****************************
+Sub TestOS()
+   Dim strComputer
+   Dim colItems
+   Dim strOS, objItem, lastBoot
+   Dim lastBootDate
+
+   strComputer = "."
+
+   Set colItems = gObjSvc.ExecQuery("SELECT * FROM Win32_OperatingSystem",,48)
+
+   For Each objItem in colItems     
+      strOS = objItem.Caption    
+      gSP = objItem.ServicePackMajorVersion
+      gR2 = objItem.OtherTypeDescription
+      lastBoot = objItem.LastBootUpTime
+      Wscript.Echo "The System OS received from system  : " & strOS
+      Wscript.Echo "The OS version received from system : " & objItem.Version
+   Next
+   
+   If InStr(strOS,"2003")<>0 Then
+      gOS = 1 ' OS is 2003 of some flavor
+   ElseIf InStr(strOS,"2008")<>0 Then
+      gOS = 2 ' OS is 2008 of some flavor
+   ElseIf InStr(strOS,"2011")<>0 Then
+      gOS = 2 ' OS is SBS 2011, mark it as 2008
+   ElseIf InStr(strOS,"2012")<>0 Then
+      gOS = 3 ' OS is 2012 of some flavor
+   ElseIf InStr(strOS,"7")<>0 Then
+      gOS = 4 ' OS is Win 7
+   ElseIf InStr(strOS,"2016")<>0 Then
+      gOS = 6 ' OS is 2016 of some flavor
+   ElseIf InStr(strOS,"2019")<>0 Then
+      gOS = 7 ' OS is 2019 of some flavor
+   ElseIf InStr(strOS, "Microsoft Windows Server Standard")<>0 Then
+      gOS = 8 ' OS is Server Standard
+   ElseIf InStr(strOS, "Microsoft Windows Server Datacenter")<>0 Then
+      gOS = 9 ' OS is 2019 of some flavor
+   ElseIf InStr(strOS, "2022")<>0 Then
+      gOS = 9 ' OS is 2022 of some flavor
+   Else
+      WScript.Echo "OS reported as " & strOS
+      gOS = 5 ' OS is some other thing we don't support
+   End If
+
+   ' Check forest functional level
+   GetFunctionalLevel()
+   
+   ' Calculate the uptime (in seconds)
+   lastBootDate = WMIDateStringToDate(lastBoot)   
+   gUptime = DateDiff("s", lastBootDate, Now)
+End Sub
+
+Sub GetFunctionalLevel()
+    On Error Resume Next
+
+    Dim objRootDSE, objPartitions
+    Dim strFFL
+
+    If (gForceFL) Then
+       Exit Sub
+    End If
+    
+
+    Set objRootDSE = GetObject("LDAP://RootDSE")
+    If (Err.Number <> 0) Then
+       WScript.Echo "Could not determine Domain Functional Level!"
+       WScript.Echo "Please try the --forceFL [2003|2008|2012|2016] flag."
+       Err.Clear
+       Exit Sub
+    End If
+
+    Set objPartitions = GetObject("LDAP://CN=Partitions," & objRootDSE.Get("configurationNamingContext"))
+    If (Err.Number <> 0) Then
+       WScript.Echo "Could not determine Domain Functional Level!"
+       WScript.Echo "Please try the --forceFL [2003|2008|2012|2016] flag."
+       Err.Clear
+       Exit Sub
+    End If
+
+    strFFL = objPartitions.Get("msDS-Behavior-Version")
+    If (Err.Number <> 0) Then
+       WScript.Echo "Could not determine Domain Functional Level!"
+       WScript.Echo "Please try the --forceFL [2003|2008|2012|2016] flag."
+       Err.Clear
+       Exit Sub
+    End If
+    'Wscript.Echo "Forest Functional level: " & strFFL
+
+    If strFFL = 0 Then
+        Wscript.Echo "This is a mixed-level forest."
+    ElseIf strFFL = 1 Then
+        Wscript.Echo "This is a Windows Server 2003 interim-level forest."
+    ElseIf strFFL = 2 Then
+        Wscript.Echo "This is a Windows Server 2003 forest."
+    ElseIf strFFL = 3 Then
+        Wscript.Echo "This is a Windows Server 2008 forest."
+    ElseIf strFFL = 4 Then
+        Wscript.Echo "This is a Windows Server 2008R2 forest."
+    ElseIf strFFL = 5 Then
+        Wscript.Echo "This is a Windows Server 2012 forest."
+    ElseIf strFFL = 6 Then
+        Wscript.Echo "This is a Windows Server 2012R2 forest."
+    ElseIf strFFL = 7 Then
+        Wscript.Echo "This is a Windows Server 2016 forest."
+    Else
+        Wscript.Echo "This is an unknown forest."
+    End If
+
+    gFunctionalLevel = strFFL
+
+End Sub
+
+' Firewall Settings Functions
+'*****************************
+
+' Test firewall settings
+Sub TestRemoteAdmin()
+   On Error Resume Next
+   Dim objFirewall, objPolicy
+   Dim objAdminSettings
+
+   Set objFirewall = CreateObject("HNetCfg.FwMgr")
+   Set objPolicy = objFirewall.LocalPolicy.CurrentProfile
+   gFWEnabled = objPolicy.FirewallEnabled
+
+   Set objAdminSettings = objPolicy.RemoteAdminSettings
+   gFWRemoteAdmin = objAdminSettings.Enabled
+   If Err.Number <> 0 Then
+      WScript.Echo "Could not check firewall settings!"
+      WScript.Echo "If the Windows Firewall/ICS service is disabled, this is normal."
+      gFWChecked = false
+      Err.Clear
+   End If
+End Sub
+
+' Sets firewall based on OS
+' Must run TestOS() first, as this function depends on gOS
+' Doesn't actually set the firewall, just pokes the hole for RemoteAdmin
+Sub SetRemoteAdmin()
+   On Error Resume Next
+   Dim WshShell
+   Dim objFirewall, objPolicy, objAdminSettings
+
+   If ((gOS = 1) And (gSP > 0)) Then
+      ' Win 2003 SP1+ command
+      ' Without SP1, there is no "netsh firewall"... 
+      '   just an ICF (Internet Connection Firewall)
+
+      Set WshShell = WScript.CreateObject("WScript.Shell")
+      WshShell.Run "netsh firewall set service type = remoteadmin mode = enable"
+   ElseIf ((gOS = 2) Or (gOS = 3) Or (gOS = 6) Or (gOS = 7) Or (gOS = 8) Or (gOS = 9) or (gOS = 10)) Then
+      ' Enable Remote Administration (FIREWALL)
+      Set objFirewall = CreateObject("HNetCfg.FwMgr")
+      If Err.Number <> 0 Then
+         WScript.Echo 
+         WScript.Echo "Error setting RemoteAdmin!  If Windows Firewall service is disabled, " 
+         WScript.Echo "   run this script with the '--forceFirewall true' argument."
+         WScript.Echo 
+      Else
+         Set objPolicy = objFirewall.LocalPolicy.CurrentProfile
+         Set objAdminSettings = objPolicy.RemoteAdminSettings
+         objAdminSettings.Enabled = True   
+      End If
+   End If
+End Sub
+
+' This function to enable the Remote Event Log Management firewall rule for reading Logon events from Event Viewer directly
+Sub SetRemoteEventLog()
+	Dim WshShell
+
+	WScript.Echo "Enabling Remote Event Log Management firewall rule"
+    Set WshShell = WScript.CreateObject("WScript.Shell")
+    WshShell.Run "netsh advfirewall firewall set rule group=""Remote Event Log Management"" new enable=yes"
+End Sub
+
+' AD User Functions
+'*****************************
+
+' Check to see if the desired AD user exists at all
+' Also sets the gAccountSID global to that user's SID
+Sub TestADUser()
+   On Error Resume Next 
+   Dim objAccount
+   
+   gADUserExists = False
+   
+   ' Get the SID for the given user
+   Set objAccount = gObjSvc.Get("Win32_UserAccount.Name='" & gAccountName & "',Domain='" & gDomain & "'")
+   If Err.Number <> 0 Then
+      WScript.Echo "Could not find user " & gDomain & "\" & gAccountName
+      gAccountSID = ""
+      gADUserExists = False
+      Err.Clear
+   Else
+      gAccountSID = objAccount.SID
+      gADUserExists = True
+   End If
+End Sub
+
+' RDC Functions
+'*****************************
+
+' Checks the Replicating Directory Changes permission on the account name (gAccountName)
+' Depends on TestADUser passing and setting gDomain and gAccountSID properly
+Sub TestRDC
+    Dim objRootLDAP, strPathToDomain, objDomain, objDescriptor
+    Dim objACE
+
+    Set objRootLDAP = GetObject("LDAP://rootDSE")
+    strPathToDomain = "LDAP://" & objRootLDAP.Get("defaultNamingContext") ' e.g. string dc=mydomain,dc=com
+    Set objDomain = GetObject(strPathToDomain)
+    Set objDescriptor = objDomain.Get("ntSecurityDescriptor")
+
+    For Each objACE In objDescriptor.DiscretionaryAcl
+        ' Get ACE entries, looking for account name (gAccountName)
+        If (lcase(objACE.Trustee) = lcase(gDomain & "\" & gAccountName)) Then
+            ' We found the right user, now make sure it's active and has the right permissions
+            If ((objACE.AceType = ADS_ACETYPE_ACCESS_ALLOWED_OBJECT) And _
+                (objACE.Flags = ADS_FLAG_OBJECT_TYPE_PRESENT) And _
+                (objACE.AccessMask = ADS_RIGHT_DS_CONTROL_ACCESS) And _
+                (objACE.ObjectType = SCHEMA_GUID_MS_REPLICATION_GET_CHANGES)) _
+            Then
+                ' Everything checks out
+                gRDCPermissions = True
+                WScript.Echo "RDC Permissions Set: " & gRDCPermissions
+
+                'WScript.Echo "Trustee: " & objACE.Trustee
+                'WScript.Echo "      AceFlags  : " & objACE.AceFlags
+                'WScript.Echo "      AceType   : " & objACE.AceType
+                'WScript.Echo "      Flags     : " & objACE.Flags
+                'WScript.Echo "      ObjectType: " & objACE.objectType
+                'WScript.Echo "      AccessMask: " & objACE.AccessMask
+            
+                ' DS Control Access right.
+                ' Grants the ability to to perform an operation restricted by an
+                ' extended access right. Must specify a rights GUID identifying a
+                ' controlAccessRight object in the Extended-Rights container in the
+                ' configuration partition.
+                'If ((objACE.AccessMask And ADS_RIGHT_DS_CONTROL_ACCESS) <> 0) Then
+                '    Call ListRights(objACE, "ADS_RIGHT_DS_CONTROL_ACCESS")
+                'End If
+             End If
+        Else
+            'WScript.Echo "Skipping " + objACE.Trustee            
+        End If
+    Next
+End Sub
+
+' Sets the Replicating Directory Changes permission on gAccountName (the account name)
+' Depends on TestADUser passing and setting gDomain and gAccountSID properly
+Sub SetRDC
+    Dim objRootLDAP, strPathToDomain, objDomain, objDescriptor
+    Dim objNewAce
+
+    Set objRootLDAP = GetObject("LDAP://rootDSE")
+    strPathToDomain = "LDAP://" & objRootLDAP.Get("defaultNamingContext") ' e.g. string dc=mydomain,dc=com
+    Set objDomain = GetObject(strPathToDomain)
+    Set objDescriptor = objDomain.Get("ntSecurityDescriptor")
+
+    ' Create the new ACE with proper permissions
+
+    Set objNewAce = createObject("AccessControlEntry")
+    objNewAce.AceFlags = 0
+    objNewAce.AceType = ADS_ACETYPE_ACCESS_ALLOWED_OBJECT
+    objNewAce.Flags = ADS_FLAG_OBJECT_TYPE_PRESENT
+    objNewAce.Trustee = gAccountSID
+    objNewAce.AccessMask = ADS_RIGHT_DS_CONTROL_ACCESS 
+    objNewAce.ObjectType = SCHEMA_GUID_MS_REPLICATION_GET_CHANGES
+    objNewAce.InheritedObjectType = SCHEMA_GUID_MS_REPLICATION_GET_CHANGES
+
+    ' Add the new ACE to the DACL
+    objDescriptor.DiscretionaryAcl.AddAce objNewAce
+    objDomain.Put "ntSecurityDescriptor", Array(objDescriptor)
+    objDomain.SetInfo
+End Sub
+
+' ELR Functions
+'*****************************
+
+' Checks that account (gAccountName) is a member of the "Event Log Readers" group
+' Depends on TestADUser passing and setting gAccountSID properly
+Sub TestELR
+    On Error Resume Next
+    Dim objELR
+    Dim objUser, memberGroup
+
+   ' Get our Event Log Readers group
+    Set objELR = GetObject("LDAP://" & gDomainFull & "/<sid=" & ELR_SID & ">")
+	If (objELR.DistinguishedName = "") Then
+	    Set objELR = GetObject("LDAP://CN=Event Log Readers,CN=Builtin," & gDomainFullyQualifiedDomain)
+	    If (objELR.DistinguishedName = "") Then
+	        Set objELR = GetObject("LDAP://<sid=" & ELR_SID & ">")
+		End If
+	End If
+	
+    If (Err.Number <> 0) Then
+        ' Server 2003 likely doesn't have an Event Log Readers group, so don't complain
+        If (gFunctionalLevel >= 3) Then
+            WScript.Echo "Could not find Event Log Readers group"
+        End If
+        
+        Err.Clear
+        Exit Sub
+    End If
+    
+    WScript.Echo  "ELR Group Domain : " & objELR.DistinguishedName
+
+    ' Get all groups that gAccountSID belongs to
+    Set objUser = GetObject("LDAP://" & gDomainFull & "/<sid=" & gAccountSID & ">")
+    For Each memberGroup in objUser.Groups
+        ' Find a group with the same DN as ELR; this is easier than checking SIDs
+        WScript.Echo  gAccountName & " member of Group DN : " & memberGroup.DistinguishedName
+        If (memberGroup.DistinguishedName = objELR.DistinguishedName) Then
+            gELRMember = True
+        End If
+    Next
+End Sub
+
+' Adds the account (gAccountName) to the Event Log Readers group
+' Depends on TestADUser passing and setting gAccountSID properly
+Sub SetELR
+    Dim objELR
+    Dim objUser
+
+    ' Get our Event Log Readers group
+    Set objELR = GetObject("LDAP://" & gDomainFull & "/<sid=" & ELR_SID & ">")
+	If (objELR.DistinguishedName = "") Then
+	    Set objELR = GetObject("LDAP://CN=Event Log Readers,CN=Builtin," & gDomainFullyQualifiedDomain)
+	    If (objELR.DistinguishedName = "") Then
+	        Set objELR = GetObject("LDAP://<sid=" & ELR_SID & ">")
+		End If
+	End If
+    WScript.Echo  "ELR Group Domain : " & objELR.DistinguishedName
+    ' Get our account (gAccountName) user
+    Set objUser = GetObject("LDAP://<sid=" & gAccountSID & ">")
+
+    ' Add our user to the ELR group
+    objELR.Add(objUser.AdsPath)
+End Sub
+
+' Policy Functions
+'*****************************
+
+' Checks Computer Configuration\Policies\Windows Settings\Security Settings\Local Policies\User Rights Assignment\Manage audit and security log
+' Depends on TestADUser passing and setting gDomain properly
+Sub TestManageELPolicy
+    Dim objWMIService, strComputer
+    Dim objItem, colItems, strAccountList
+
+    ' Since this should be running on a DC, let's just assume if RSOP allows it here it will be allowed everywhere
+    strComputer = "."
+    Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\rsop\computer")
+
+    Set colItems = objWMIService.ExecQuery("Select * from RSOP_UserPrivilegeRight")
+    For Each objItem in colItems
+        If (objItem.UserRight = "SeSecurityPrivilege") Then
+            ' Make sure the account (gAccountName) appears in this list
+            For Each strAccountList in objItem.AccountList
+                If (lcase(strAccountList) = lcase(gDomain & "\" & gAccountName)) Then
+                    gManageELPSet = true
+                End If
+            Next
+        End If
+    Next
+End Sub
+
+' Human readable string for OS
+'*****************************
+Function OSToString(OS)
+
+Dim strOS 
+
+If OS = 1 Then
+   strOS = "Windows 2003"
+ElseIf OS = 2 Then
+   strOS = "Windows Server 2008"
+ElseIf OS = 3 Then
+   strOS = "Windows Server 2012"
+ElseIf OS = 4 Then
+   strOS = "Win 7"
+ElseIf OS = 6 Then
+   strOS = "Windows Server 2016"
+ElseIf OS = 7 Then
+   strOS = "Windows Server 2019"
+ElseIf OS = 8 Then
+   strOS = "Microsoft Windows Server Standard"
+ElseIf OS = 9 Then
+   strOS = "Microsoft Windows Server Datacenter"
+ElseIf OS = 10 Then
+   strOS = "Windows Server 2022"
+Else
+   strOS = "Unsupported OS"
+End If
+
+If gR2 <> "" Then
+strOS = strOS & " " & gR2
+End If
+
+If gSP <> 0 Then
+strOS = strOS & " Service Pack " & gSP
+End If
+
+OSToString = strOS
+
+End Function
+
+Function FLToString(FL)
+
+    Dim strFL
+
+    If FL = 0 Then
+        strFL = "Server 2000 Forest"
+    ElseIf FL = 1 Then
+        strFL = "Server 2003 interim-level Forest"
+    ElseIf FL = 2 Then
+        strFL = "Server 2003 Forest"
+    ElseIf FL = 3 Then
+        strFL = "Server 2008 Forest"
+    ElseIf FL = 4 Then
+        strFL = "Server 2008 R2 Forest"
+    ElseIf FL = 5 Then
+        strFL = "Server 2012 Forest"
+    ElseIf FL = 6 Then
+        strFL = "Server 2012 R2 Forest"
+    ElseIf FL = 7 Then
+        strFL = "Server 2016 Forest"
+    Else
+        strFL = "unknown forest"
+    End If
+
+    FLToString = strFL
+
+End Function
+
+
+' Input Function
+'*****************************
+Function UserInput( myPrompt )
+
+WScript.StdOut.Write myPrompt & " "
+UserInput = WScript.StdIn.ReadLine
+
+End Function
+
+Sub AutoRegisterDC()
+    WScript.Echo ""
+    regdec = UserInput("Would you like to register this Domain Controller (y or n)?")
+    If InStr(regdec,"y")=1 Then
+         ' Radio home results
+         If gOauthAuthentication="0" Then   
+            SendAssetRegister()
+            SendAssetUpdate()
+         ElseIf gOauthAuthentication="1" Then
+            SendForAuthToken()
+            SendAssetRegisterEnhancedAuth()
+            SendForAuthToken()
+            SendAssetUpdateEnhancedAuth()         
+         Else
+            WScript.Echo("Register failure. Unauthorized, missing mandatory credentials.")
+         End If
+    End If
+End Sub
+
+' Transport Functions
+'*****************************
+Sub SendAssetRegister()
+
+   Dim url
+   Dim objHTTP
+   Dim data
+
+   WScript.Echo("Registering Domain Controller in cloud...")
+
+   url = gCloudEndpoint + "OnPremAsset.register"
+
+   Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+   
+   Call objHTTP.Open("POST", url, FALSE)
+   objHTTP.setRequestHeader "Content-Type","application/x-www-form-urlencoded"
+   
+   data = "api_key=298CF21F81C788EDA27E85C3E2E2C415" & _
+      "&type=" & gAssetType & "&org_id=" & gOrgID & _
+      "&ipaddress_internal=" & gIntIP & "&label=" & gServerLabel & _
+      "&org_token=" & gCustomerID_Token
+
+   On Error Resume Next
+   objHTTP.send(data)
+   
+   If (Err.Number <> 0) Then
+      WScript.Echo("")
+      WScript.Echo("*****")
+      WScript.Echo("Error sending Domain Controller registration:")
+      WScript.Echo(Err.Description)
+      WScript.Echo("Please verify that the Domain Controller can access the Cisco API ")
+      WScript.Echo("(" & gCloudEndpoint & ") at port 443!")
+      WScript.Echo("*****")
+      WScript.Echo("")
+      Err.Clear
+      Exit Sub
+   End If
+
+   'WScript.Echo("Register Response (" & objHTTP.status & "): " & objHTTP.responseText
+   If (objHTTP.status = 200) Then
+      WScript.Echo("Register Success!")
+      gToken = objHTTP.responseText
+   Else
+      WScript.Echo("Register failure, response (" & _
+         objHTTP.status & "): " & objHTTP.responseText)
+   End If
+   
+End Sub
+
+Sub SendForAuthToken()
+   Dim tokenUrl
+   Dim objHTTP
+   Dim data
+   Dim responseJsonString
+   Dim accessTokenPos
+   Dim accessTokenEndPos
+
+   WScript.Echo("Fetching token...")
+
+   tokenUrl = gTokenEndpoint
+
+   Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+
+   Call objHTTP.Open("GET", tokenUrl, FALSE)
+   objHTTP.setRequestHeader "Content-Type","application/json"
+   objHTTP.setRequestHeader "Authorization", "Basic " & EncodeBase64(gClientId & ":" & gClientSecret)
+
+   data = ""
+
+   On Error Resume Next
+   objHTTP.send(data)
+
+   If (Err.Number <> 0) Then
+      WScript.Echo("")
+      WScript.Echo("*****")
+      WScript.Echo("Error fetching token:")
+      WScript.Echo(Err.Description)
+      WScript.Echo("Please verify that API is accessible ")
+      WScript.Echo("(" & gTokenEndpoint & ") at port 443!")
+      WScript.Echo("*****")
+      WScript.Echo("")
+      Err.Clear
+      Exit Sub
+   End If
+
+   'WScript.Echo("Auth token request response (" & objHTTP.status & "): " & objHTTP.responseText)
+   If (objHTTP.status = 200) Then
+      WScript.Echo("Auth token fetched!")
+      responseJsonString = objHTTP.responseText
+      accessTokenPos = InStr(responseJsonString, """access_token""") + Len("""access_token"":")
+      accessTokenEndPos = InStr(accessTokenPos, responseJsonString, ",")
+      gAccessToken = replace(Mid(responseJsonString, accessTokenPos, accessTokenEndPos - accessTokenPos), chr(34), "")
+   Else
+      WScript.Echo("Register failure, response (" & _
+         objHTTP.status & "): " & objHTTP.responseText)
+   End If
+
+End Sub
+
+Sub SendAssetRegisterEnhancedAuth()
+   Dim url
+   Dim objHTTP
+   Dim data
+   Dim responseJsonString
+   Dim assetidPos
+   Dim assetidEndPos
+
+   WScript.Echo("Registering Domain Controller in cloud...")
+   
+   url = gCloudEndpoint + "/onpremappliances"
+
+   Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+   
+   Call objHTTP.Open("POST", url, FALSE)
+   objHTTP.setRequestHeader "Content-Type","application/json"
+   objHTTP.setRequestHeader "Authorization", "Bearer " & gAccessToken
+
+   data = _
+      "{ " & vbCrLf & _
+      "   ""type"": """ & gAssetType & """, " & vbCrLf & _
+      "   ""label"": """ & gServerLabel & """, " & vbCrLf & _
+      "   ""domains"": [""" & gDomainFull & """]," & vbCrLf & _
+      "   ""ipaddress_internal"": [""" & gIntIP & """]" & vbCrLf & _
+      "}"
+
+   On Error Resume Next
+   objHTTP.send(data)
+   
+   If (Err.Number <> 0) Then
+      WScript.Echo("")
+      WScript.Echo("*****")
+      WScript.Echo("Error sending Domain Controller registration:")
+      WScript.Echo(Err.Description)
+      WScript.Echo("Please verify that the Domain Controller can access the Cisco API ")
+      WScript.Echo("(" & gCloudEndpoint & ") at port 443!")
+      WScript.Echo("*****")
+      WScript.Echo("")
+      Err.Clear
+      Exit Sub
+   End If
+
+   'WScript.Echo("Register Response (" & objHTTP.status & "): " & objHTTP.responseText
+   If (objHTTP.status = 200) Then
+      WScript.Echo("Register Success!")
+      responseJsonString = objHTTP.responseText
+      assetidPos = InStr(responseJsonString, """asset_id""") + Len("""asset_id"":")
+      assetidEndPos = InStr(assetidPos, responseJsonString, ",")
+      gToken = Mid(responseJsonString, assetidPos, assetidEndPos - assetidPos)
+   Else
+      WScript.Echo("Register failure, response (" & _
+         objHTTP.status & "): " & objHTTP.responseText)
+   End If
+
+End Sub
+
+Sub SendAssetUpdateEnhancedAuth()
+   Dim serverTime
+   Dim url
+   Dim objHTTP
+   Dim data
+
+   ' Don't attempt to register unless we have a good token (via a Register)
+   If (gToken = "") Then
+      WScript.Echo("Can't update DC status in the cloud without registering!")
+      Exit Sub
+   End If
+
+   WScript.Echo("Updating DC status in cloud...")
+   
+   serverTime = DateDiff("s", "01/01/1970 00:00:00", Now())
+   
+   url = gCloudEndpoint + "onpremappliances/" + gToken + "/syncs"
+   
+   Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+   
+   Call objHTTP.Open("POST", url, FALSE)
+   objHTTP.setRequestHeader "Content-Type","application/json"
+   objHTTP.setRequestHeader "Authorization", "Bearer " & gAccessToken
+
+   data = _
+      "{ " & vbCrLf & _
+      "   ""AssetID"": """ & gToken & """, " & vbCrLf & _
+      "   ""ConfigVersion"": ""1""," & vbCrLf & _
+      "   ""Environment"": { " & vbCrLf & _
+      "      ""Domains"": [""" & gDomainFull & """]," & vbCrLf & _
+      "      ""InternalIPs"": [""" & gIntIP & """]," & vbCrLf & _
+      "      ""ServerTime"": """ & serverTime & """" & vbCrLf & _
+      "   }, " & vbCrLf & _
+      "   ""Status"": { " & vbCrLf & _
+      "      ""Uptime"": """ & gUptime & """ " & vbCrLf & _
+      "   } " & vbCrLf & _
+      "}"
+
+   On Error Resume Next
+   objHTTP.send(data)
+   
+   If (Err.Number <> 0) Then
+      WScript.Echo("")
+      WScript.Echo("*****")
+      WScript.Echo("Error sending Update:")
+      WScript.Echo(Err.Description)
+      WScript.Echo("If the registration was successful, this may be " & _ 
+         "a problem with the UpdateStatus API call")
+      WScript.Echo("*****")
+      WScript.Echo("")
+      Err.Clear
+      Exit Sub
+   End If
+   
+   'WScript.Echo("Update Response (" & objHTTP.status & "): " & objHTTP.responseText
+   If (objHTTP.status = 200) Then
+      WScript.Echo("Update success!")
+   Else
+      WScript.Echo("Update failure, response (" & _ 
+         objHTTP.status & "): " & objHTTP.responseText)
+   End If
+   
+End Sub
+
+Sub SendAssetUpdate()
+   Dim serverTime
+   Dim url
+   Dim objHTTP
+   Dim data
+
+   ' Don't attempt to register unless we have a good token (via a Register)
+   If (gToken = "") Then
+      WScript.Echo("Can't update DC status in the cloud without registering!")
+      Exit Sub
+   End If
+
+   WScript.Echo("Updating DC status in cloud...")
+   
+   serverTime = DateDiff("s", "01/01/1970 00:00:00", Now())
+   
+   url = gCloudEndpoint + "OnPremAsset.sync"
+   
+   Set objHTTP = CreateObject("MSXML2.XMLHTTP")
+   
+   Call objHTTP.Open("POST", url, FALSE)
+   objHTTP.setRequestHeader "Content-Type","application/json"
+   objHTTP.setRequestHeader "X-OpenDNS-API-Key", "298CF21F81C788EDA27E85C3E2E2C415"
+   
+   data = _
+      "{ " & vbCrLf & _
+      "   ""AssetID"": """ & gToken & """, " & vbCrLf & _
+      "   ""Org_ID"": """ & gOrgID & """, " & vbCrLf & _
+      "   ""Org_Token"": """ & gCustomerID_Token & """, " & vbCrLf & _
+      "   ""ConfigVersion"": ""1""," & vbCrLf & _
+      "   ""Environment"": { " & vbCrLf & _
+      "      ""Domains"": [""" & gDomainFull & """]," & vbCrLf & _
+      "      ""InternalIP"": """ & gIntIP & """," & vbCrLf & _
+      "      ""ServerTime"": """ & serverTime & """" & vbCrLf & _
+      "   }, " & vbCrLf & _
+      "   ""Status"": { " & vbCrLf & _
+      "      ""Uptime"": """ & gUptime & """ " & vbCrLf & _
+      "   } " & vbCrLf & _
+      "}"
+
+   On Error Resume Next
+   objHTTP.send(data)
+   
+   If (Err.Number <> 0) Then
+      WScript.Echo("")
+      WScript.Echo("*****")
+      WScript.Echo("Error sending Update:")
+      WScript.Echo(Err.Description)
+      WScript.Echo("If the Register was successful, this may be " & _ 
+         "a problem with the UpdateStatus API call")
+      WScript.Echo("*****")
+      WScript.Echo("")
+      Err.Clear
+      Exit Sub
+   End If
+   
+   'WScript.Echo("Update Response (" & objHTTP.status & "): " & objHTTP.responseText
+   If (objHTTP.status = 200) Then
+      WScript.Echo("Update success!")
+   Else
+      WScript.Echo("Update failure, response (" & _ 
+         objHTTP.status & "): " & objHTTP.responseText)
+   End If
+   
+End Sub
+
+'Function to Base64 encode a string
+Function EncodeBase64(inData)
+  Dim cOut, sOut, I
+  Dim nGroup, pOut, sGroup
+
+  Const Base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+  'For each group of 3 bytes
+  For I = 1 To Len(inData) Step 3
+
+    'Create one long from this 3 bytes.
+    nGroup = &H10000 * Asc(Mid(inData, I, 1)) + _
+      &H100 * MyASC(Mid(inData, I + 1, 1)) + MyASC(Mid(inData, I + 2, 1))
+
+    'Oct splits the long To 8 groups with 3 bits
+    nGroup = Oct(nGroup)
+
+    'Add leading zeros
+    nGroup = String(8 - Len(nGroup), "0") & nGroup
+
+    'Convert To base64
+    pOut = Mid(Base64, CLng("&o" & Mid(nGroup, 1, 2)) + 1, 1) + _
+      Mid(Base64, CLng("&o" & Mid(nGroup, 3, 2)) + 1, 1) + _
+      Mid(Base64, CLng("&o" & Mid(nGroup, 5, 2)) + 1, 1) + _
+      Mid(Base64, CLng("&o" & Mid(nGroup, 7, 2)) + 1, 1)
+
+    'Add the part To OutPut string
+    sOut = sOut + pOut
+
+    'Add a new line For Each 76 chars In dest (76*3/4 = 57)
+    'If (I + 2) Mod 57 = 0 Then sOut = sOut + vbCrLf
+  Next
+  Select Case Len(inData) Mod 3
+    Case 1: '8 bit final
+      sOut = Left(sOut, Len(sOut) - 2) + "=="
+    Case 2: '16 bit final
+      sOut = Left(sOut, Len(sOut) - 1) + "="
+  End Select
+  EncodeBase64 = sOut
+End Function
+
+Function MyASC(OneChar)
+  If OneChar = "" Then MyASC = 0 Else MyASC = Asc(OneChar)
+End Function
+
+' Utility function to convert the WMI time format to the VBScript time format 
+Function WMIDateStringToDate(dtmBootup)
+   WMIDateStringToDate = CDate(Mid(dtmBootup, 5, 2) & "/" & _
+      Mid(dtmBootup, 7, 2) & "/" & Left(dtmBootup, 4) _
+      & " " & Mid (dtmBootup, 9, 2) & ":" & _
+      Mid(dtmBootup, 11, 2) & ":" & Mid(dtmBootup,13, 2))
+End Function
+
+
+Function GetIPAddress()
+
+Dim strComputer
+Dim objWMIService
+Dim IPConfigSet
+Dim IPConfig, i, out
+Dim notDone
+Dim IP, index
+
+strComputer = "."
+
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set IPConfigSet = objWMIService.ExecQuery _
+    ("Select * from Win32_NetworkAdapterConfiguration Where IPEnabled=TRUE")
+ 
+ReDim IPList(0)
+
+For Each IPConfig in IPConfigSet
+    If Not IsNull(IPConfig.IPAddress) Then 
+        For i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+            If Not IsNull(IPConfig.IPAddress(i)) Then
+                ' Strip out any IP addresses with : (no IPv6)
+                If Not (Instr(IPConfig.IPAddress(i), ":") > 0) Then
+                   out = IPConfig.IPAddress(i)
+                   IPList(UBound(IPList)) = out
+                   ReDim Preserve IPList(UBound(IPList) + 1)
+               End If
+            End If
+        Next
+    End If
+Next
+
+' Take off the empty one
+If Not UBound(IPList) = 0 Then
+    ReDim Preserve IPList(UBound(IPList) - 1)
+End If
+
+If UBound(IPList) = 0 Then
+    GetIPAddress = out
+    'WScript.Echo ""
+    'WScript.Echo "Detected IP: " & GetIPAddress
+Else
+
+notDone = true
+Do While notDone
+
+' Let user choose IP if more than one
+WScript.Echo ""
+WScript.Echo "Multiple IPs detected "
+
+index = 0
+For Each IP in IPList
+    index = index + 1   
+    WScript.Echo index & ") " & IP
+Next
+WScript.Echo ""
+
+notDone = false
+
+index = UserInput("Please enter the number of the IP you would like to use:")
+
+If Not IsNumeric(index) Then
+    WScript.Echo "Input was not a number - try again"
+    notDone = true
+Else
+    If CInt(index) > UBound(IPList)+1 Then
+        WScript.Echo "Invalid choice - choose again"
+        notDone = true
+    ElseIf (index = 0) Then
+        WScript.Echo "Invalid choice - choose again"
+        notDone = true
+    End If
+End If
+
+Loop
+ 
+GetIPAddress = IPList(index-1)
+
+WScript.Echo "You chose IP: " & GetIPAddress
+
+End If
+
+End Function
+
+' Get Domain Name
+Function GetDomainFullName()
+   Dim DomainFullyQualifiedDomainName
+   Dim DomainFullyQualifiedDomainNameArray
+   Dim DomainNameFECount
+   Dim item
+
+   DomainFullyQualifiedDomainNameArray = Split(gDomainFull,".")
+   DomainFullyQualifiedDomainName=""
+   DomainNameFECount=0
+
+   For each item in DomainFullyQualifiedDomainNameArray
+      If DomainNameFECount = 0 then
+          DomainFullyQualifiedDomainName = "DC=" + item
+      Else
+          DomainFullyQualifiedDomainName = DomainFullyQualifiedDomainName + ",DC=" + item
+      End If
+      DomainNameFECount = DomainNameFECount + 1
+   Next
+   GetDomainFullName = DomainFullyQualifiedDomainName
+End Function
+
+' Gets our domain
+Function GetComputerFullDomainName()
+   On Error Resume Next
+   Dim objItemSet, objItem
+   Set objItemSet = GetObject("winmgmts:\root\cimv2").ExecQuery("select * from Win32_ComputerSystem")
+   For Each objItem in objItemSet
+      GetComputerFullDomainName = lcase(objItem.Domain)
+   Next
+End Function
+
+' Gets our domain without the suffix
+Function GetComputerDomainName()
+   On Error Resume Next
+   Dim objItemSet, objItem, sysInfo
+	If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty) then
+		Set objItemSet = GetObject("winmgmts:\root\cimv2").ExecQuery("select * from Win32_NTDomain")
+		For Each objItem in objItemSet
+			GetComputerDomainName = objItem.DomainName
+			' If there are multiple domains, just take the first and ignore the rest...
+		Exit For
+		Next
+	End If
+	If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty) then
+		Set sysInfo = CreateObject("ADSystemInfo")
+		GetComputerDomainName = sysInfo.DomainShortName
+	End If
+	If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty)  then
+        Set WshNetwork = CreateObject("Wscript.Network")
+		GetComputerDomainName = WshNetwork.UserDomain
+   End If
+   If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty) then
+		Set wshShell = CreateObject( "WScript.Shell" )
+		strNETBIOSName = wshShell.ExpandEnvironmentStrings( "%USERDOMAIN%" )
+		GetComputerDomainName = strNETBIOSName
+	End If
+	If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty) then
+		Set objSysInfo = CreateObject( "WinNTSystemInfo" )
+		strDomainName = objSysInfo.DomainName
+		GetComputerDomainName = strDomainName
+	End If
+   If (GetComputerDomainName = "") Or (GetComputerDomainName = Empty) then
+		WScript.Echo "NetBIOS name for domain could not be found. Please re-run this script with parameter ""--forcenetbios <NetBIOS>"""
+		WScript.Echo "Example: cscript Cisco-WindowsConfigurationScript-********.wsf --forcenetbios <NetBIOS>"
+		WScript.Quit
+   End If
+End Function
+
+' Gets our hostname
+Function GetComputerHostName()
+   On Error Resume Next
+   Dim objItemSet, objItem
+   Set objItemSet = GetObject("winmgmts:\root\cimv2").ExecQuery("select * from Win32_ComputerSystem")
+   For Each objItem in objItemSet
+      GetComputerHostName = objItem.Name
+   Next
+End Function
+
+' Tells us whether we are properly configured or not
+Function IsConfiguredInFull()
+   IsConfiguredInFull = False
+   
+   ' Force user
+   If (gForceUserExists) Then
+      gADUserExists = True
+      gRDCPermissions = True
+      gELRMember = True
+   End If
+
+   ' Force firewall
+   If (gForceFW) Then
+      gFWRemoteAdmin = True
+   End If
+
+   If (gForceNonVA) Then
+        gELRMember = True
+        gManageELPSet = True
+        If (gADUserExists And gRDCPermissions And gELRMember) Then
+            IsConfiguredInFull = True
+         ElseIf (gFWRemoteAdmin And gADUserExists And gRDCPermissions And gELRMember) Then
+            IsConfiguredInFull = True
+         End If
+
+   End If
+
+   If (gFWRemoteAdmin And gADUserExists And gRDCPermissions And gELRMember) Then
+      IsConfiguredInFull = True
+   End If
+
+End Function
+
+Function IsAdmin
+    IsAdmin = 0
+    On Error Resume Next
+    Dim key
+    key = CreateObject("WScript.Shell").RegRead("HKEY_USERS\S-1-5-19\Environment\TEMP")
+    if Err.Number = 0 Then
+        IsAdmin = 1
+    End If
+    Err.Clear
+End Function
+
+Function CollectArgs
+
+Dim item, args, cur, count
+Set args = WScript.Arguments
+
+count = 0
+For Each item In args
+    If (lcase(item) = "--forceuserexists") Then
+         If (args.length > (count+1)) Then
+            cur = args(count+1)
+            If (cur = "true") Then
+                gForceUserExists = 1
+            Else
+                gForceUserExists = 0
+            End If
+            WScript.Echo "forceUser: " & gForceUserExists
+         End If
+    ElseIf (lcase(item) = "--forcefirewall") Then
+         If (args.length > (count+1)) Then
+            cur = args(count+1)
+            If (cur = "true") Then
+                gForceFW = 1
+            Else
+                gForceFW = 0
+            End If
+            WScript.Echo "forceFirewall: " & cur
+         End If
+    ElseIf (lcase(item) = "--forceadmin") Then
+         If (args.length > (count+1)) Then
+            cur = args(count+1)
+            If (cur = "true") Then
+                gForceAdmin = 1
+            Else
+                gForceAdmin = 0
+            End If
+            WScript.Echo "forceAdmin: " & cur
+         End If
+    ElseIf (lcase(item) = "--forcedomain") Then
+         If (args.length > (count+1)) Then
+            gDomain = args(count+1)
+            WScript.Echo "forceDomain: " & gDomain
+         End If
+    ElseIf (lcase(item) = "--forcefl") Then
+         If (args.length > (count+1)) Then
+            If (args(count+1) = "2003") Then
+                WScript.Echo "Forcing 2003 functional level"
+                gFunctionalLevel = 2
+                gForceFL = true
+            ElseIf (args(count+1) = "2008") Then
+                WScript.Echo "Forcing 2008 functional level"
+                gFunctionalLevel = 3
+                gForceFL = true
+            ElseIf (args(count+1) = "2012") Then
+                WScript.Echo "Forcing 2012 functional level"
+                gFunctionalLevel = 5
+                gForceFL = true
+            ElseIf (args(count+1) = "2016") Then
+                WScript.Echo "Forcing 2016 functional level"
+                gFunctionalLevel = 7
+                gForceFL = true
+            Else
+                WScript.Echo "Unknown functional level: " + args(count+1)
+                WScript.Echo "Please use --forceFl [2003|2008|2012|2016]"
+            End If
+        End If
+    ElseIf (lcase(item) = "--forceregister") Then
+         If (args.length > (count+1)) Then
+            cur = args(count+1)
+            If (cur = "true") Then
+                gForceRegister = 1
+            Else
+                gForceRegister = 0
+            End If
+            WScript.Echo "forceRegister: " & cur
+         End If
+    ElseIf (lcase(item) = "--forcenonva") Then
+        If (args.length > (count+1)) Then
+            cur = args(count+1)
+            If (cur = "true") Then
+                gForceNonVA = 1
+            Else
+                gForceNonVA = 0
+            End If
+            WScript.echo "Non VA Mode : " & gForceNonVA
+        End If
+	  ElseIf (lcase(item) = "--forcenetbios") Then
+         If (args.length > (count+1)) Then
+            cur = args(count+1)
+			      gForceNetBios = Trim(cur)
+         End If
+    ElseIf (lcase(item) = "--username") Then
+        If (args.length > (count+1)) Then
+            cur = Trim(args(count+1))
+            If (cur<>"") Then
+                gAccountName = cur
+            Else
+                gAccountName = ACCOUNT_NAME
+            End If 
+            WScript.echo "Username (Account Name) : " & gAccountName
+        End If
+    Else
+        ' Unrecognized option
+    End If
+    count = count + 1
+Next
+
+End Function
+
+Sub ListRights(objACE_Item, strRight)
+    ' Subroutine to document rights to text file.
+    ' objReport is the output file object, with global scope.
+    If (objACE_Item.objectType = "") _
+            And (objACE_Item.InheritedObjectType = "") Then
+        WScript.Echo "  " & strRight
+    Else
+        If (objACE_Item.InheritedObjectType = "") Then
+            WScript.Echo "  " & strRight & " for SchemaIDGuid: " _
+                & objACE_Item.objectType
+        Else
+            WScript.Echo "  Inherited " & strRight _
+                & " for SchemaIDGuid: " & objACE_Item.InheritedObjectType
+        End If
+    End If
+End Sub
+
+</script>
+</job>

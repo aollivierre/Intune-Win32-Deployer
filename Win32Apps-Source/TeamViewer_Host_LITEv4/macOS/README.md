@@ -1,1 +1,0 @@
-check the https://github.com/aollivierre/JAMF/tree/main/apps/TeamViewerv4 for the latest version 

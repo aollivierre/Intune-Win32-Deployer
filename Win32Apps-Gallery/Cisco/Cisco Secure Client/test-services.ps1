@@ -1,0 +1,1 @@
+Get-Service -Name 'csc_*', 'vpnagent', 'acwebsecagent' -ErrorAction SilentlyContinue | Select-Object Name, Status

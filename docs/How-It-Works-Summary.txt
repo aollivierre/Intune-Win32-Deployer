@@ -1,0 +1,40 @@
+Summary
+
+  Based on my analysis of the Intune-Win32-Deployer project, here's how it works:
+
+  Folder Structure
+
+  - Win32Apps-Source: Place your applications here. Each app needs its own folder with:
+    - install.ps1 - Installation script
+    - uninstall.ps1 - Uninstallation script
+    - check.ps1 - Detection script (returns 0 if installed)
+    - config.json - App-specific configuration
+    - Any other required files (executables, configs, etc.)
+
+  Authentication Methods
+
+  The script supports both authentication methods:
+  1. Certificate-based authentication (preferred) - Uses a .pfx certificate with TenantID, ClientId, and certificate password
+  2. Interactive authentication (fallback) - Browser-based login when certificate auth fails
+
+  How to Set Up
+
+  1. Create a folder in secrets/ with your tenant name
+  2. Add secrets.json with:
+  {
+    "TenantID": "your-tenant-id",
+    "ClientId": "your-app-registration-id",
+    "CertPassword": "your-cert-password"
+  }
+  3. Place your certificate (.pfx file) in the same tenant folder
+
+  Workflow
+
+  1. Script prompts you to select a tenant from available folders in secrets/
+  2. Attempts certificate authentication first
+  3. Falls back to interactive if certificate fails
+  4. Scans Win32Apps-Source for applications
+  5. Packages each app using Microsoft's IntuneWinAppUtil.exe
+  6. Uploads to Intune
+
+  I've created documentation in /docs/How-It-Works.md with complete details about the folder structure, authentication methods, required files, and usage tips.
