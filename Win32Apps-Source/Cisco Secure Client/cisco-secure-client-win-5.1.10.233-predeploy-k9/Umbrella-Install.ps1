@@ -1,3 +1,0 @@
-Start-Process msiexec /package cisco-secure-client-win-5.1.10.233-core-vpn-predeploy-k9.msi PRE_DEPLOY_DISABLE_VPN=1 /norestart /passive /lvx* vpninstall.log
-Start-Process msiexec /package cisco-secure-client-win-5.1.10.233-umbrella-predeploy-k9.msi PRE_DEPLOY_DISABLE_VPN=1 /norestart /passive /lvx* umbrellainstall.log
-Start-Process msiexec /package cisco-secure-client-win-5.1.10.233-dart-predeploy-k9.msi /norestart /passive /lvx* dartinstall.log
